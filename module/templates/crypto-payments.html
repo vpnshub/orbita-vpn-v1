@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Платежи Crypto Bot - Админ Панель{% endblock %}
+
+{% block page_title %}<i class="mdi mdi-credit-card-multiple mr-2"></i>Платежи Crypto Bot{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{{ url_for('cryptopayments.index') }}">Crypto Bot</a></li>
+<li class="breadcrumb-item active">Платежи</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="mt-0 header-title">История платежей Crypto Bot</h4>
+                        <p class="text-muted">Список всех платежей, проведенных через платежную систему Crypto Bot</p>
+                    </div>
+                </div>
+                <div class="text-center mt-3">
+                    <div class="alert alert-dark">
+                        <strong>Всего найдено:</strong> {{ total_items }} платежей
+                        {% if total_amount is defined %}
+                        <strong class="ml-3">На сумму:</strong> {{ total_amount }} ₽
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0">
+                        <thead>
+                            <tr>
+                                <th>Пользователь</th>
+                                <th>Telegram ID</th>
+                                <th>Тариф</th>
+                                <th class="text-center">Сумма (₽)</th>
+                                <th class="text-center">Дата оплаты</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if payments %}
+                                {% for payment in payments %}
+                                <tr>
+                                    <td>{{ payment.username }}</td>
+                                    <td>{{ payment.telegram_id }}</td>
+                                    <td>{{ payment.tariff_name }}</td>
+                                    <td class="text-center">{{ payment.amount }} ₽</td>
+                                    <td class="text-center">{{ payment.created_at }}</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">
+                                        {% if error_message %}
+                                            <div class="alert alert-danger">{{ error_message }}</div>
+                                        {% else %}
+                                            Нет доступных платежей или соединение с API не установлено.
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                    
+                    {% if total_pages and total_pages > 1 %}
+                    <div class="mt-4 d-flex justify-content-center">
+                        <nav aria-label="Навигация по страницам">
+                            <ul class="pagination">
+                                <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+                                    <a class="page-link" href="{{ url_for('cryptopayments.index', page=current_page-1) if current_page > 1 else '#' }}" tabindex="-1">
+                                        Предыдущая
+                                    </a>
+                                </li>
+                                
+                                <li class="page-item {% if current_page == 1 %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('cryptopayments.index') }}">1</a>
+                                </li>
+                                
+                                {% if current_page > 4 %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% endif %}
+                                
+                                {% for pg in range(current_page-2, current_page+3) %}
+                                    {% if pg > 1 and pg < total_pages %}
+                                        <li class="page-item {% if pg == current_page %}active{% endif %}">
+                                            <a class="page-link" href="{{ url_for('cryptopayments.index', page=pg) }}">
+                                                {{ pg }}
+                                                {% if pg == current_page %}<span class="sr-only">(текущая)</span>{% endif %}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if current_page < total_pages - 3 %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% endif %}
+                                
+                                {% if total_pages > 1 %}
+                                <li class="page-item {% if current_page == total_pages %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('cryptopayments.index', page=total_pages) }}">{{ total_pages }}</a>
+                                </li>
+                                {% endif %}
+                                
+                                <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+                                    <a class="page-link" href="{{ url_for('cryptopayments.index', page=current_page+1) if current_page < total_pages else '#' }}">
+                                        Следующая
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

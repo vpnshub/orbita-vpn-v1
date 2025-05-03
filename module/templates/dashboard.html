@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Панель управления{% endblock %}
+
+{% block page_title %}<i class="mdi mdi-view-dashboard mr-2"></i>Панель управления{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Панель управления</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-9">
+                        <div class="row justify-content-center">
+                            <div class="col-md-3">
+                                <div class="card mb-0">
+                                    <div class="card-body">
+                                        <div class="float-right">
+                                            <i class="dripicons-user-group font-24 text-secondary"></i>
+                                        </div> 
+                                        <span class="badge badge-danger">Всего пользователей</span>
+                                        <h3 class="font-weight-bold">{{ total_users }}</h3>
+                                        <p class="mb-0 text-muted text-truncate"><span class="text-success"><i class="mdi mdi-cart-plus"></i>{{ total_subscriptions }}</span> подписок в базе</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card mb-0">
+                                    <div class="card-body">
+                                        <div class="float-right">
+                                            <i class="mdi mdi-tag  font-20 text-secondary"></i>
+                                        </div> 
+                                        <span class="badge badge-info">Самый популярный тариф</span>
+                                        <h3 class="font-weight-bold">{{ popular_tariff.name }}</h3>
+                                        <p class="mb-0 text-muted text-truncate"><span class="text-success"><i class="mdi mdi-trending-up"></i>{{ popular_tariff.count }}</span> раз куплен</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card mb-0">
+                                    <div class="card-body">
+                                        <div class="float-right">
+                                            <i class="mdi mdi-cash-multiple font-20 text-secondary"></i>
+                                        </div> 
+                                        <span class="badge badge-warning">Последний платеж</span>
+                                        <h3 class="font-weight-bold">{{ last_payment.price }} ₽</h3>
+                                        <p class="mb-0 text-muted text-truncate"><span class="text-success"><i class="dripicons-plus"></i>{{ last_payment.payment_date }}</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card mb-0">
+                                    <div class="card-body">
+                                        <div class="float-right">
+                                            <i class="dripicons-wallet font-20 text-secondary"></i>
+                                        </div> 
+                                        <span class="badge badge-success">Всего покупок на</span>
+                                        <h3 class="font-weight-bold">{{ total_amount }} ₽</h3>
+                                        <p class="mb-0 text-muted text-truncate"><span class="text-success"><i class="mdi mdi-trending-up"></i>{{ top_buyer.username or 'Неизвестно' }}</span> Топ покупатель</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 align-self-center">
+                        <img src="{{ url_for('static', filename='images/dash.svg') }}" alt="" class="img-fluid">
+                    </div>
+                </div>                                                                              
+            </div> 
+
+        </div> 
+    </div>                               
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body mb-0">
+                <div class="row">                                            
+                    <div class="col-8 align-self-center">
+                        <div class="">
+                            <h4 class="mt-0 header-title">Статистика депозитов</h4>
+                            <h2 class="mt-0 header-title text-dark">Сумма депозитов: {{ total_balance }} ₽</h2>
+                            <p class="mb-0 text-muted">Депозит имеют: <span class="text-success">{{ users_with_balance }}</span> пользователя</p>
+                            <p class="mb-0 text-muted">
+                                {% if last_deposit.type == 'transfer_out' %}
+                                Последний перевод:
+                                {% else %}
+                                Последнее пополнение:
+                                {% endif %} 
+                                <span class="text-success">{{ last_deposit.created_at }}</span></p>
+                            <p class="mb-0 text-muted">Пользователь: <span class="text-success">{% if last_deposit.username %}{{ last_deposit.username }}{% else %}{{ last_deposit.telegram_id }}{% endif %}</span></p>
+                            <p class="mb-0 text-muted">Сумма: <span class="{% if last_deposit.amount < 0 %}text-danger{% else %}text-success{% endif %}">{{ last_deposit.amount }} ₽</span></p>
+                            <p class="mb-0 text-muted">Описание: <span class="text-success">{{ last_deposit.description }}</span></p>
+                            
+                            <p class="mb-0 text-muted">Тип: 
+                                {% if last_deposit.type == 'deposit' %}
+                                <span class="badge badge-info">Пополнение через бота</span>
+                                {% elif last_deposit.type == 'api_transaction' %}
+                                <span class="badge badge-primary">Пополнение Администратором веб-панели</span>
+                                {% elif last_deposit.type == 'transfer_in' %}
+                                <span class="badge badge-info">Перевод от другого пользователя</span>
+                                {% elif last_deposit.type == 'transfer_out' %}
+                                <span class="badge badge-warning">Перевод другому пользователю</span>
+                                {% elif last_deposit.type == 'referral_reward' %}
+                                <span class="badge badge-success">Получение награды</span>
+                                {% elif last_deposit.type == 'subscription_payment' %}
+                                <span class="badge badge-danger">Списание с баланса</span>
+                                {% else %}
+                                <span class="text-success">{{ last_deposit.type }}</span>
+                                {% endif %}
+                            </p> 
+                        </div>
+                    </div>
+                    <div class="col-4 align-self-center">
+                        <div class="icon-info text-right">
+                            <i class="dripicons-wallet bg-soft-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body overflow-hidden p-0">
+                <div class="d-flex mb-0 h-100 dash-info-box">
+                    <div class="w-100">                                                
+                        <div class="apexchart-wrapper">
+                            <div id="apex_column1" class="chart-gutters"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>                                                                    
+        </div>
+    </div> 
+    
+                      
+    
+    <div class="col-lg-6">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <h5 class="card-header bg-primary text-white mt-0">Статистика серверов</h5>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Сервер</th>
+                                        <th>Всего подписок</th>
+                                        <th>Активных подписок</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for server in servers %}
+                                    <tr>
+                                        <td>{{ server.server_name }}</td>
+                                        <td>{{ server.total_subscriptions }}</td>
+                                        <td>{{ server.subscriptions_count }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row mt-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <h5 class="card-header bg-success text-white mt-0">5 последних платежей ЮKassa</h5>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Пользователь</th>
+                                <th>Telegram ID</th>
+                                <th>Тариф</th>
+                                <th>Сумма</th>
+                                <th>Дата оплаты</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if yookassa_payments %}
+                                {% for payment in yookassa_payments %}
+                                <tr>
+                                    <td>{{ payment.username }}</td>
+                                    <td>{{ payment.telegram_id }}</td>
+                                    <td>{{ payment.tariff_name }}</td>
+                                    <td>{{ payment.price }} ₽</td>
+                                    <td>{{ payment.date }}</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">Нет данных о платежах</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <h5 class="card-header bg-info text-white mt-0">5 последних платежей Crypto Bot</h5>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Пользователь</th>
+                                <th>Telegram ID</th>
+                                <th>Тариф</th>
+                                <th>Сумма</th>
+                                <th>Дата оплаты</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if crypto_payments %}
+                                {% for payment in crypto_payments %}
+                                <tr>
+                                    <td>{{ payment.username }}</td>
+                                    <td>{{ payment.telegram_id }}</td>
+                                    <td>{{ payment.tariff_name }}</td>
+                                    <td>{{ payment.amount }} ₽</td>
+                                    <td>{{ payment.created_at }}</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">Нет данных о платежах</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

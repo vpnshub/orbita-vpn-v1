@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Транзакции баланса - Админ Панель{% endblock %}
+
+{% block page_title %}<i class="mdi mdi-bank-transfer mr-2"></i>Транзакции баланса{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Транзакции баланса</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    html, body {
+        height: auto;
+    }
+    .page-wrapper {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    .page-content {
+        flex-grow: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="mt-0 header-title">История транзакций баланса</h4>
+                        <p class="text-muted">Список всех транзакций баланса пользователей</p>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <div class="alert alert-dark">
+                        <strong>Всего найдено:</strong> {{ total_count }} транзакций
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0">
+                        <thead>
+                            <tr>
+                                <th>Пользователь</th>
+                                <th>Telegram ID</th>
+                                <th>Тип операции</th>
+                                <th>Описание</th>
+                                <th class="text-center">Сумма</th>
+                                <th class="text-center">Дата</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if transactions %}
+                                {% for transaction in transactions %}
+                                <tr>
+                                    <td>{{ transaction.username }}</td>
+                                    <td>{{ transaction.telegram_id }}</td>
+                                    <td>
+                                        {% if transaction.type == 'api_transaction' %}
+                                            <span class="badge badge-success">{{ transaction.type_display }}</span>
+                                        {% elif transaction.type == 'deposit' %}
+                                            <span class="badge badge-success">{{ transaction.type_display }}</span>
+                                        {% elif transaction.type == 'subscription_payment' %}
+                                            <span class="badge badge-primary">{{ transaction.type_display }}</span>
+                                        {% elif transaction.type == 'pending' %}
+                                            <span class="badge badge-warning">{{ transaction.type_display }}</span>    
+                                        {% else %}
+                                            {{ transaction.type_display }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ transaction.description }}</td>
+                                    <td class="text-center">{{ transaction.amount }} ₽</td>
+                                    <td class="text-center">{{ transaction.created_at }}</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        {% if error_message %}
+                                            <div class="alert alert-danger">{{ error_message }}</div>
+                                        {% else %}
+                                            Нет доступных транзакций или соединение с API не установлено.
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                    
+                    {% if total_pages and total_pages > 1 %}
+                    <div class="mt-4 d-flex justify-content-center">
+                        <nav aria-label="Навигация по страницам">
+                            <ul class="pagination">
+                                <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+                                    <a class="page-link" href="{{ url_for('balance_transaction.index', page=current_page-1) if current_page > 1 else '#' }}" tabindex="-1">
+                                        Предыдущая
+                                    </a>
+                                </li>
+                                
+                                <li class="page-item {% if current_page == 1 %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('balance_transaction.index') }}">1</a>
+                                </li>
+                                
+                                {% if current_page > 4 %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% endif %}
+                                
+                                {% for pg in range(current_page-2, current_page+3) %}
+                                    {% if pg > 1 and pg < total_pages %}
+                                        <li class="page-item {% if pg == current_page %}active{% endif %}">
+                                            <a class="page-link" href="{{ url_for('balance_transaction.index', page=pg) }}">
+                                                {{ pg }}
+                                                {% if pg == current_page %}<span class="sr-only">(текущая)</span>{% endif %}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if current_page < total_pages - 3 %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% endif %}
+                                
+                                {% if total_pages > 1 %}
+                                <li class="page-item {% if current_page == total_pages %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('balance_transaction.index', page=total_pages) }}">{{ total_pages }}</a>
+                                </li>
+                                {% endif %}
+                                
+                                <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+                                    <a class="page-link" href="{{ url_for('balance_transaction.index', page=current_page+1) if current_page < total_pages else '#' }}">
+                                        Следующая
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

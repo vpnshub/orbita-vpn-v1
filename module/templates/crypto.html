@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Настройки Crypto Pay - Админ Панель{% endblock %}
+
+{% block page_title %}<i class="mdi mdi-bitcoin mr-2"></i>Настройки Crypto Pay{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Crypto Pay</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="mt-0 header-title">Настройки Crypto Pay</h4>
+                        <p class="text-muted">Управление настройками криптовалютных платежей</p>
+                    </div>
+                    <div>
+                       <!-- <button type="button" class="btn btn-primary btn-square btn-outline-dashed waves-effect waves-light" id="addCryptoSettingsBtn">
+                            <i class="mdi mdi-plus mr-2"></i>Добавить настройки
+                        </button> -->
+                    </div>
+                </div>
+
+                <div class="alert alert-warning border-0">
+                    <i class="mdi mdi-information-outline mr-2"></i>
+                    Из за особенностей работы Crypto Bot, в данном разделе пока доступнен только просмотр текущих настроек, удаление и добавление новых настроек доступно из админ-меню телеграм бота.
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0">
+                        <thead>
+                            <tr>
+                                <th>API Токен</th>
+                                <th class="text-center">Минимальная сумма</th>
+                                <th class="text-center">Валюты</th>
+                                <th class="text-center">Статус</th>
+                                <!--<th class="text-center">Действия</th>-->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if settings %}
+                                <tr>
+                                    <td>{{ settings.api_token }}</td>
+                                    <td class="text-center">{{ settings.min_amount }}</td>
+                                    <td class="text-center">{{ settings.supported_assets }}</td>
+                                    <td class="text-center">
+                                        {% if settings.is_enable == 1 %}
+                                            <span class="badge badge-success">Активен</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">Отключен</span>
+                                        {% endif %}
+                                    </td>
+                                    <!--<td class="text-center">
+                                        {% if settings.is_enable == 1 %}
+                                            <button type="button" class="btn btn-danger btn-square btn-outline-dashed waves-effect waves-light toggle-status" 
+                                                    data-token="{{ settings.api_token }}" data-action="disable">
+                                                    <i class="mdi mdi-close-circle-outline mr-2"></i>Отключить
+                                            </button>
+                                        {% else %}
+                                            <button type="button" class="btn btn-success btn-square btn-outline-dashed waves-effect waves-light toggle-status" 
+                                                    data-token="{{ settings.api_token }}" data-action="enable">
+                                                    <i class="mdi mdi-check-circle-outline mr-2"></i>Включить
+                                            </button>
+                                        {% endif %}
+                                    </td> -->
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">Нет доступных настроек</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addCryptoSettingsModal" tabindex="-1" role="dialog" aria-labelledby="addCryptoSettingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCryptoSettingsModalLabel">Добавление настроек Crypto Pay</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addCryptoSettingsForm">
+                    <div class="form-group">
+                        <label for="api_token">API Токен</label>
+                        <input type="text" class="form-control" id="api_token" placeholder="Введите API токен" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="min_amount">Минимальная сумма</label>
+                        <input type="number" class="form-control" id="min_amount" placeholder="Введите минимальную сумму" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="supported_assets">Поддерживаемые валюты</label>
+                        <input type="text" class="form-control" id="supported_assets" placeholder="Например: USDT" required>
+                        <small class="form-text text-muted">Введите валюты через запятую</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="saveCryptoSettingsBtn">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('.toggle-status').on('click', function() {
+            var token = $(this).data('token');
+            var action = $(this).data('action');
+            var isEnable = action === 'enable' ? 1 : 0;
+            
+            $.ajax({
+                url: "{{ url_for('crypto.toggle_settings') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    api_token: token,
+                    is_enable: isEnable
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('Ошибка: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Произошла ошибка при выполнении запроса');
+                }
+            });
+        });
+
+        $('#addCryptoSettingsBtn').on('click', function() {
+            $('#addCryptoSettingsModal').modal('show');
+        });
+
+        $('#saveCryptoSettingsBtn').on('click', function() {
+            var apiToken = $('#api_token').val().trim();
+            var minAmount = $('#min_amount').val();
+            
+            if (!apiToken || !minAmount) {
+                showNotification('API токен и минимальная сумма обязательны для заполнения', 'error');
+                return;
+            }
+
+            var formData = {
+                api_token: apiToken,
+                min_amount: parseFloat(minAmount),
+                supported_assets: $('#supported_assets').val() 
+                    ? $('#supported_assets').val().split(',').map(s => s.trim().toUpperCase())
+                    : ['USDT']  
+            };
+
+            $.ajax({
+                url: "{{ url_for('crypto.add_settings') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    if (response.success) {
+                        $('#addCryptoSettingsModal').modal('hide');
+                        showNotification(response.message || 'Настройки успешно сохранены');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showNotification('Ошибка: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    var errorMessage = 'Произошла ошибка при сохранении настроек';
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.message) {
+                            errorMessage = response.message;
+                        }
+                    } catch(e) {}
+                    showNotification(errorMessage, 'error');
+                    console.error('Error:', xhr);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 

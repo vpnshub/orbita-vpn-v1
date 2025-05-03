@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+
+{% block title %}Коды оплаты - Админ Панель{% endblock %}
+
+{% block page_title %}<i class="mdi mdi-cash-multiple mr-2"></i>Управление кодами оплаты{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Коды оплаты</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="mt-0 header-title">Список кодов оплаты</h4>
+                        <p class="text-muted">Коды для пополнения баланса пользователей</p>
+                    </div>
+                    <div>
+
+                        <button type="button" class="btn btn-primary btn-square btn-outline-dashed waves-effect waves-light" id="addPayCodeBtn">
+                            <i class="mdi mdi-plus mr-2"></i>Добавить код оплаты
+                        </button>
+                    </div>
+                </div>
+
+                <div class="alert alert-dark border-0">
+                    <i class="mdi mdi-information-outline mr-2"></i>
+                    Коды оплаты позволяют пользователям оплачивать тарифные планы в боте через кнопку «Оплатить кодом оплаты». Если номинал кода превышает стоимость тарифного плана, код будет погашен полностью. Учитывайте это при выдаче кодов пользователям.
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0">
+                        <thead>
+                            <tr>
+                                <th>Код</th>
+                                <th class="text-center">Номинал (₽)</th>
+                                <th class="text-center">Дата создания</th>
+                                <th class="text-center">Статус</th>
+                                <th class="text-center">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if pay_codes %}
+                                {% for code in pay_codes %}
+                                <tr>
+                                    <td><span class="badge badge-success font-14">{{ code.pay_code }}</span></td>
+                                    <td class="text-center">{{ code.sum }} ₽</td>
+                                    <td class="text-center">{{ code.create_date }}</td>
+                                    <td class="text-center">
+                                        {% if code.is_enable == 1 %}
+                                            <span class="badge badge-success">Активен</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">Использован</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-danger btn-square btn-outline-dashed waves-effect waves-light delete-paycode" 
+                                                data-id="{{ code.id }}">
+                                                <i class="mdi mdi-delete mr-2"></i>Удалить
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">
+                                        {% if error_message %}
+                                            <div class="alert alert-danger">{{ error_message }}</div>
+                                        {% else %}
+                                            Нет доступных кодов оплаты или соединение с API не установлено.
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                    
+                    {% if total_pages > 1 %}
+                    <div class="mt-4 d-flex justify-content-center">
+                        <nav aria-label="Навигация по страницам">
+                            <ul class="pagination">
+                                <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+                                    <a class="page-link" href="{{ url_for('payment_codes', page=current_page-1) if current_page > 1 else '#' }}" tabindex="-1">
+                                        Предыдущая
+                                    </a>
+                                </li>
+                                
+                                {% for pg in range(1, total_pages + 1) %}
+                                <li class="page-item {% if pg == current_page %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('payment_codes', page=pg) }}">
+                                        {{ pg }}
+                                        {% if pg == current_page %}<span class="sr-only">(текущая)</span>{% endif %}
+                                    </a>
+                                </li>
+                                {% endfor %}
+                                
+                                <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+                                    <a class="page-link" href="{{ url_for('payment_codes', page=current_page+1) if current_page < total_pages else '#' }}">
+                                        Следующая
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                    
+                    <div class="text-center text-muted mt-2">
+                        Всего найдено: {{ total_items }} кодов оплаты
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Модальное окно добавления новых кодов оплаты -->
+<div class="modal fade" id="addPayCodeModal" tabindex="-1" role="dialog" aria-labelledby="addPayCodeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addPayCodeModalLabel">Создание кодов оплаты</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addPayCodeForm">
+                    <div class="form-group">
+                        <label for="add_amount">Номинал (₽)</label>
+                        <input type="number" class="form-control" id="add_amount" min="1" value="100" required>
+                        <small class="form-text text-muted">Сумма пополнения баланса по этому коду</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="add_count">Количество кодов</label>
+                        <input type="number" class="form-control" id="add_count" min="1" max="100" value="1" required>
+                        <small class="form-text text-muted">Количество кодов для создания (от 1 до 100)</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-square btn-outline-dashed waves-effect waves-light" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary btn-square btn-outline-dashed waves-effect waves-light" id="savePayCodeBtn">
+                    <i class="mdi mdi-content-save mr-2"></i>Создать
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="deletePaycodeModal" tabindex="-1" role="dialog" aria-labelledby="deletePaycodeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deletePaycodeModalLabel">Удаление кода оплаты</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить код оплаты <span id="delete_paycode_display" class="font-weight-bold"></span>?</p>
+                <p class="text-danger">Это действие нельзя отменить.</p>
+                <input type="hidden" id="delete_paycode_id">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-square btn-outline-dashed waves-effect waves-light" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger btn-square btn-outline-dashed waves-effect waves-light" id="confirmDeletePaycodeBtn">
+                    <i class="mdi mdi-delete mr-2"></i>Удалить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+       
+        function showNotification(message, type) {
+            var icon = 'mdi-check-circle-outline';
+            var bgClass = 'bg-success';
+            
+            if (type === 'error') {
+                icon = 'mdi-alert-circle-outline';
+                bgClass = 'bg-danger';
+            }
+            
+            
+            var notification = $('<div class="toast fade show" role="alert" aria-live="assertive" aria-atomic="true">' +
+                '<div class="toast-header ' + bgClass + ' text-white">' +
+                '<i class="mdi ' + icon + ' mr-2"></i>' +
+                '<strong class="mr-auto">Уведомление</strong>' +
+                '<button type="button" class="ml-2 mb-1 close text-white" data-dismiss="toast" aria-label="Close">' +
+                '<span aria-hidden="true">&times;</span>' +
+                '</button>' +
+                '</div>' +
+                '<div class="toast-body">' + message + '</div>' +
+                '</div>');
+            
+            
+            if ($('#toast-container').length === 0) {
+                $('body').append('<div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>');
+            }
+            
+            $('#toast-container').append(notification);
+            
+            
+            setTimeout(function() {
+                notification.toast('hide');
+                setTimeout(function() {
+                    notification.remove();
+                }, 500);
+            }, 3000);
+        }
+        
+        
+        $('#addPayCodeBtn').on('click', function() {
+            
+            $('#add_amount').val(100);
+            $('#add_count').val(1);
+            
+            
+            $('#addPayCodeModal').modal('show');
+        });
+        
+       
+        $('#savePayCodeBtn').on('click', function() {
+           
+            if (!$('#add_amount').val() || !$('#add_count').val()) {
+                showNotification('Пожалуйста, заполните все поля', 'error');
+                return;
+            }
+            
+            var amount = parseFloat($('#add_amount').val());
+            var count = parseInt($('#add_count').val());
+            
+        
+            if (amount < 1) {
+                showNotification('Номинал должен быть больше 0', 'error');
+                return;
+            }
+            
+            if (count < 1 || count > 100) {
+                showNotification('Количество кодов должно быть от 1 до 100', 'error');
+                return;
+            }
+                
+                    
+            var payCodeData = {
+                amount: amount,
+                count: count
+            };
+            
+            $.ajax({
+                url: "{{ url_for('create_pay_code') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payCodeData),
+                success: function(response) {
+                    if (response.success) {
+                       
+                        $('#addPayCodeModal').modal('hide');
+                        
+                        var message = count > 1 ? 
+                            'Успешно создано ' + count + ' кодов оплаты' : 
+                            'Код оплаты успешно создан';
+                        
+                        showNotification(message);
+                        
+                       
+                        {% if current_page and current_page > 1 %}
+                        setTimeout(function() {
+                            window.location.href = "{{ url_for('payment_codes', page=current_page) }}";
+                        }, 1000);
+                        {% else %}
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                        {% endif %}
+                    } else {
+                        showNotification('Ошибка: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showNotification('Произошла ошибка при создании кода оплаты. Пожалуйста, попробуйте снова.', 'error');
+                    console.error(error);
+                }
+            });
+        });
+        
+       
+        $('.delete-paycode').on('click', function() {
+            var id = $(this).data('id');
+            var code = $(this).data('code');
+            
+           
+            $('#delete_paycode_id').val(id);
+            $('#delete_paycode_display').text(code);
+            
+            
+            $('#deletePaycodeModal').modal('show');
+        });
+        
+       
+        $('#confirmDeletePaycodeBtn').on('click', function() {
+            var id = $('#delete_paycode_id').val();
+            
+            $.ajax({
+                url: "{{ url_for('delete_pay_code') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    id: id
+                }),
+                success: function(response) {
+                    if (response.success) {
+                       
+                        $('#deletePaycodeModal').modal('hide');
+                        
+                       
+                        showNotification('Код оплаты успешно удален');
+                        
+                       
+                        {% if current_page and current_page > 1 %}
+                        setTimeout(function() {
+                            window.location.href = "{{ url_for('payment_codes', page=current_page) }}";
+                        }, 1000);
+                        {% else %}
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                        {% endif %}
+                    } else {
+                        showNotification('Ошибка: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showNotification('Произошла ошибка при удалении кода оплаты. Пожалуйста, попробуйте снова.', 'error');
+                    console.error(error);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 

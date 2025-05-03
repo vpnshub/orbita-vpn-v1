@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}Настройки YooKassa - Админ Панель{% endblock %}
+
+{% block page_title %}<i class="mdi mdi-credit-card-outline mr-2"></i>Настройки YooKassa{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">YooKassa</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="mt-0 header-title">Настройки YooKassa</h4>
+                        <p class="text-muted">Управление настройками платежной системы YooKassa</p>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-primary btn-square btn-outline-dashed waves-effect waves-light" id="addSettingsBtn">
+                            <i class="mdi mdi-plus mr-2"></i>Добавить настройки
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="alert alert-dark border-0">
+                    <i class="mdi mdi-information-outline mr-2"></i>
+                    После добавления новых платежных настроек YooKassa необходимо перезапустить бота, чтобы они вступили в силу.
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0">
+                        <thead>
+                            <tr>
+                                <th>Наименование</th>
+                                <th>SHOP ID</th>
+                                <th>Описание</th>
+                                <th class="text-center">Статус</th>
+                                <th class="text-center">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if settings %}
+                                <tr>
+                                    <td>{{ settings.name }}</td>
+                                    <td>{{ settings.shop_id }}</td>
+                                    <td>{{ settings.description or '-' }}</td>
+                                    <td class="text-center">
+                                        {% if settings.is_enable %}
+                                            <span class="badge badge-success">Активно</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">Отключено</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-danger btn-square btn-outline-dashed waves-effect waves-light delete-settings" 
+                                                data-shop-id="{{ settings.shop_id }}" id="delete-btn-{{ settings.shop_id }}">
+                                                <i class="mdi mdi-power mr-2"></i>Удалить
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">Нет доступных настроек</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addSettingsModal" tabindex="-1" role="dialog" aria-labelledby="addSettingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addSettingsModalLabel">Добавление настроек YooKassa</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addSettingsForm">
+                    <div class="form-group">
+                        <label for="name">Наименование</label>
+                        <input type="text" class="form-control" id="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="shop_id">Shop ID</label>
+                        <input type="text" class="form-control" id="shop_id" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="api_key">API ключ</label>
+                        <input type="text" class="form-control" id="api_key" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Описание</label>
+                        <textarea class="form-control" id="description" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="saveSettingsBtn">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        function showNotification(message, type = 'success') {
+            if (typeof toastr !== 'undefined') {
+                toastr.options = {
+                    "closeButton": true,
+                    "progressBar": true,
+                    "positionClass": "toast-top-right",
+                    "timeOut": "3000"
+                };
+                
+                if (type === 'success') {
+                    toastr.success(message);
+                } else if (type === 'error') {
+                    toastr.error(message);
+                }
+            } else {
+                if (type === 'error') {
+                    alert('Ошибка: ' + message);
+                } else {
+                    alert(message);
+                }
+            }
+        }
+
+        $('#addSettingsBtn').on('click', function() {
+            $('#addSettingsModal').modal('show');
+        });
+
+        $('#saveSettingsBtn').on('click', function() {
+            var formData = {
+                name: $('#name').val().trim(),
+                shop_id: $('#shop_id').val().trim(),
+                api_key: $('#api_key').val().trim(),
+                description: $('#description').val().trim() || null
+            };
+
+            if (!formData.name || !formData.shop_id || !formData.api_key) {
+                showNotification('Пожалуйста, заполните все обязательные поля', 'error');
+                return;
+            }
+
+            $.ajax({
+                url: "{{ url_for('yookassa.add_settings') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    if (response.success) {
+                        $('#addSettingsModal').modal('hide');
+                        showNotification(response.message || 'Настройки успешно добавлены');
+                        $('#addSettingsForm')[0].reset();
+                        window.location.reload();
+                    } else {
+                        showNotification('Ошибка: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    var errorMessage = 'Произошла ошибка при сохранении настроек';
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.message) {
+                            errorMessage = response.message;
+                        }
+                    } catch(e) {}
+                    showNotification(errorMessage, 'error');
+                }
+            });
+        });
+
+        $(document).on('click', '.delete-settings', function() {
+            if (!confirm('Вы уверены, что хотите удалить эти настройки?')) {
+                return;
+            }
+
+            var shopId = $(this).data('shop-id');
+            console.log('Удаление настроек для shop_id:', shopId);
+            
+            var $btn = $(this);
+            var originalHtml = $btn.html();
+            $btn.html('<i class="mdi mdi-loading mdi-spin"></i>');
+            $btn.prop('disabled', true);
+            
+            var requestData = {
+                shop_id: String(shopId).trim()
+            };
+            console.log('Данные для отправки:', requestData);
+            
+            $.ajax({
+                url: "{{ url_for('yookassa.delete_settings') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(requestData),
+                success: function(response) {
+                    console.log('Ответ сервера:', response);
+                    if (response.success) {
+                        showNotification(response.message || 'Настройки успешно удалены');
+                        window.location.reload();
+                    } else {
+                        showNotification(response.message || 'Ошибка при удалении настроек', 'error');
+                        $btn.html(originalHtml);
+                        $btn.prop('disabled', false);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $btn.html(originalHtml);
+                    $btn.prop('disabled', false);
+                    
+                    console.error('Ошибка удаления. Статус:', status, 'Ошибка:', error);
+                    console.error('Детали ответа:', xhr.responseText);
+                    
+                    var errorMessage = 'Произошла ошибка при удалении настроек';
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.message) {
+                            errorMessage = response.message;
+                        }
+                    } catch(e) {}
+                    showNotification(errorMessage, 'error');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 

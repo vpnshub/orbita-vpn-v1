@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+
+{% block title %}Пробные тарифы - Админ Панель{% endblock %}
+
+{% block page_title %}<i class="mdi mdi-tag-outline mr-2"></i>Управление пробными тарифами{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Пробные тарифы</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="mt-0 header-title">Список пробных тарифов</h4>
+                        <p class="text-muted">Пробный тариф позволяет пользователю бесплатно протестировать VPN-сервис, активировав его в Telegram-боте. Доступен один раз для каждого пользователя.</p>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-primary btn-square btn-outline-dashed waves-effect waves-light" id="addTrialBtn">
+                            <i class="mdi mdi-plus mr-2"></i>Добавить пробный тариф
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="alert alert-dark border-0">
+                    <i class="mdi mdi-information-outline mr-2"></i>
+                    <strong>Внимание!</strong> Одновременно может быть активен только один пробный тариф. Создание нового пробного тарифа автоматически деактивирует все предыдущие. Если вам нужно изменить сервер или количество дней, вы можете отредактировать текущий пробный тариф.
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0">
+                        <thead>
+                            <tr>
+                                <th>Наименование</th>
+                                <th class="text-center">Пробных дней</th>
+                                <th class="text-center">Сервер</th>
+                                <th class="text-center">Статус</th>
+                                <th class="text-center">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if trials %}
+                                {% for trial in trials %}
+                                <tr>
+                                    <td>{{ trial.name }}</td>
+                                    <td class="text-center">{{ trial.left_day }}</td>
+                                    <td class="text-center">{{ trial.server_name }}</td>
+                                    <td class="text-center">
+                                        {% if trial.is_enable == 1 %}
+                                            <span class="badge badge-success">Активен</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">Не активен</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-primary btn-square btn-outline-dashed waves-effect waves-light edit-trial" 
+                                               data-id="{{ trial.id }}"
+                                               data-name="{{ trial.name }}"
+                                               data-leftday="{{ trial.left_day }}"
+                                               data-serverid="{{ trial.server_id }}">
+                                                <i class="mdi mdi-pencil mr-2"></i>Редактировать
+                                        </button>
+                                        <button type="button" class="btn btn-danger btn-square btn-outline-dashed waves-effect waves-light delete-trial" 
+                                                data-id="{{ trial.id }}">
+                                                <i class="mdi mdi-power mr-2"></i>Удалить
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">
+                                        {% if error_message %}
+                                            <div class="alert alert-danger">{{ error_message }}</div>
+                                        {% else %}
+                                            Нет доступных пробных тарифов или соединение с API не установлено.
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="addTrialModal" tabindex="-1" role="dialog" aria-labelledby="addTrialModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTrialModalLabel">Создание пробного тарифа</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addTrialForm">
+                    <div class="form-group">
+                        <label for="add_trial_name">Наименование</label>
+                        <input type="text" class="form-control" id="add_trial_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="add_trial_left_day">Количество дней</label>
+                        <input type="number" class="form-control" id="add_trial_left_day" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="add_trial_server_id">Сервер</label>
+                        <select class="form-control" id="add_trial_server_id" required>
+                            <option value="">Выберите сервер</option>
+                            <!-- Список серверов будет загружен через AJAX -->
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-square btn-outline-dashed waves-effect waves-light" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary btn-square btn-outline-dashed waves-effect waves-light" id="saveTrialBtn">
+                    <i class="mdi mdi-content-save mr-2"></i>Сохранить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="editTrialModal" tabindex="-1" role="dialog" aria-labelledby="editTrialModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editTrialModalLabel">Редактирование пробного тарифа</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editTrialForm">
+                    <input type="hidden" id="edit_trial_id">
+                    <div class="form-group">
+                        <label for="edit_trial_name">Наименование</label>
+                        <input type="text" class="form-control" id="edit_trial_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_trial_left_day">Количество дней</label>
+                        <input type="number" class="form-control" id="edit_trial_left_day" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_trial_server_id">Сервер</label>
+                        <select class="form-control" id="edit_trial_server_id" required>
+                            <option value="">Выберите сервер</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-square btn-outline-dashed waves-effect waves-light" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary btn-square btn-outline-dashed waves-effect waves-light" id="updateTrialBtn">
+                    <i class="mdi mdi-content-save mr-2"></i>Сохранить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="deleteTrialModal" tabindex="-1" role="dialog" aria-labelledby="deleteTrialModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteTrialModalLabel">Подтверждение удаления</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить этот пробный тариф?</p>
+                <input type="hidden" id="delete_trial_id">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-square btn-outline-dashed waves-effect waves-light" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger btn-square btn-outline-dashed waves-effect waves-light" id="confirmDeleteTrialBtn">
+                    <i class="mdi mdi-power mr-2"></i>Удалить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+       
+        function loadServers(selectElement, selectedServerId) {
+            $.ajax({
+                url: "{{ url_for('get_servers') }}",
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                       
+                        $(selectElement).find('option').not(':first').remove();
+                        
+                        $.each(response.servers, function(i, server) {
+                            let option = $('<option>', {
+                                value: server.id,
+                                text: server.name
+                            });
+                            
+                           
+                            if (selectedServerId && server.id == selectedServerId) {
+                                option.attr('selected', 'selected');
+                            }
+                            
+                            $(selectElement).append(option);
+                        });
+                    } else {
+                        alert('Ошибка при загрузке серверов: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Произошла ошибка при загрузке списка серверов.');
+                    console.error(error);
+                }
+            });
+        }
+        
+       
+        $('#addTrialBtn').on('click', function() {
+           
+            $('#addTrialForm')[0].reset();
+            
+           
+            loadServers('#add_trial_server_id');
+            
+           
+            $('#addTrialModal').modal('show');
+        });
+        
+       
+        $('#saveTrialBtn').on('click', function() {
+           
+            if (!$('#add_trial_name').val() || !$('#add_trial_left_day').val() || !$('#add_trial_server_id').val()) {
+                alert('Пожалуйста, заполните все обязательные поля');
+                return;
+            }
+            
+            
+            var trialData = {
+                name: $('#add_trial_name').val(),
+                left_day: parseInt($('#add_trial_left_day').val()),
+                server_id: parseInt($('#add_trial_server_id').val())
+            };
+            
+           
+            $.ajax({
+                url: "{{ url_for('create_trial') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(trialData),
+                success: function(response) {
+                    if (response.success) {
+                       
+                        $('#addTrialModal').modal('hide');
+                        
+                       
+                        location.reload();
+                    } else {
+                        alert('Ошибка: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Произошла ошибка при создании пробного тарифа. Пожалуйста, попробуйте снова.');
+                    console.error(error);
+                }
+            });
+        });
+        
+       
+        $('.edit-trial').on('click', function() {
+            var id = $(this).data('id');
+            var name = $(this).data('name');
+            var leftDay = $(this).data('leftday');
+            var serverId = $(this).data('serverid');
+            
+           
+            $('#edit_trial_id').val(id);
+            $('#edit_trial_name').val(name);
+            $('#edit_trial_left_day').val(leftDay);
+            
+           
+            loadServers('#edit_trial_server_id', serverId);
+            
+           
+            $('#editTrialModal').modal('show');
+        });
+        
+       
+        $('#updateTrialBtn').on('click', function() {
+           
+            if (!$('#edit_trial_name').val() || !$('#edit_trial_left_day').val() || !$('#edit_trial_server_id').val()) {
+                alert('Пожалуйста, заполните все обязательные поля');
+                return;
+            }
+            
+            
+            var trialData = {
+                id: $('#edit_trial_id').val(),
+                name: $('#edit_trial_name').val(),
+                left_day: parseInt($('#edit_trial_left_day').val()),
+                server_id: parseInt($('#edit_trial_server_id').val())
+            };
+            
+            
+            $.ajax({
+                url: "{{ url_for('update_trial') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(trialData),
+                success: function(response) {
+                    if (response.success) {
+                       
+                        $('#editTrialModal').modal('hide');
+                        
+                       
+                        location.reload();
+                    } else {
+                        alert('Ошибка: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Произошла ошибка при обновлении. Пожалуйста, попробуйте снова.');
+                    console.error(error);
+                }
+            });
+        });
+        
+       
+        $('.delete-trial').on('click', function() {
+            var id = $(this).data('id');
+            $('#delete_trial_id').val(id);
+            $('#deleteTrialModal').modal('show');
+        });
+        
+       
+        $('#confirmDeleteTrialBtn').on('click', function() {
+            var id = $('#delete_trial_id').val();
+            
+            $.ajax({
+                url: "{{ url_for('delete_trial') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ id: id }),
+                success: function(response) {
+                    if (response.success) {
+                       
+                        $('#deleteTrialModal').modal('hide');
+                        
+                       
+                        location.reload();
+                    } else {
+                        alert('Ошибка: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Произошла ошибка при удалении. Пожалуйста, попробуйте снова.');
+                    console.error(error);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 

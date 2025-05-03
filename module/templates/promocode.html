@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block title %}Промокоды - Админ Панель{% endblock %}
+
+{% block page_title %}<i class="mdi mdi-ticket-percent mr-2"></i>Управление промокодами{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Промокоды</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="mt-0 header-title">Список промокодов</h4>
+                        <p class="text-muted">Скидочные купоны для пользователей</p>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-primary btn-square btn-outline-dashed waves-effect waves-light" id="addPromocodeBtn">
+                            <i class="mdi mdi-plus mr-2"></i>Добавить промокод
+                        </button>
+                    </div>
+                </div>
+
+                <div class="alert alert-dark border-0">
+                    <i class="mdi mdi-information-outline mr-2"></i>
+                    Промокоды дают скидку на оплату тарифа. При создании промокода система автоматически генерирует случайный код. Укажите максимальное количество использований и процент скидки.
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0">
+                        <thead>
+                            <tr>
+                                <th>Код</th>
+                                <th class="text-center">Скидка (%)</th>
+                                <th class="text-center">Лимит активаций</th>
+                                <th class="text-center">Был активирован</th>
+                                <th class="text-center">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if promocodes %}
+                                {% for promocode in promocodes %}
+                                <tr>
+                                    <td><span class="badge badge-primary font-14">{{ promocode.promocod }}</span></td>
+                                    <td class="text-center">{{ promocode.percentage }}%</td>
+                                    <td class="text-center">{{ promocode.activation_limit }} раз</td>
+                                    <td class="text-center">{{ promocode.activation_total }} раз</td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-danger btn-square btn-outline-dashed waves-effect waves-light delete-promocode" 
+                                                data-code="{{ promocode.promocod }}">
+                                                <i class="mdi mdi-delete mr-2"></i>Удалить
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">
+                                        {% if error_message %}
+                                            <div class="alert alert-danger">{{ error_message }}</div>
+                                        {% else %}
+                                            Нет доступных промокодов или соединение с API не установлено.
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="addPromocodeModal" tabindex="-1" role="dialog" aria-labelledby="addPromocodeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addPromocodeModalLabel">Создание промокода</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addPromocodeForm">
+                    <div class="form-group">
+                        <label for="add_activation_limit">Количество активаций</label>
+                        <input type="number" class="form-control" id="add_activation_limit" min="1" value="1" required>
+                        <small class="form-text text-muted">Максимальное количество раз, которое можно использовать промокод</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="add_percentage">Процент скидки</label>
+                        <input type="number" class="form-control" id="add_percentage" min="1" max="100" value="10" required>
+                        <small class="form-text text-muted">Значение от 1 до 100</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-square btn-outline-dashed waves-effect waves-light" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary btn-square btn-outline-dashed waves-effect waves-light" id="savePromocodeBtn">
+                    <i class="mdi mdi-content-save mr-2"></i>Создать
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="deletePromocodeModal" tabindex="-1" role="dialog" aria-labelledby="deletePromocodeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deletePromocodeModalLabel">Удаление промокода</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить промокод <span id="delete_code_display" class="font-weight-bold"></span>?</p>
+                <p class="text-danger">Это действие нельзя отменить.</p>
+                <input type="hidden" id="delete_promocode_code">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-square btn-outline-dashed waves-effect waves-light" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger btn-square btn-outline-dashed waves-effect waves-light" id="confirmDeletePromocodeBtn">
+                    <i class="mdi mdi-delete mr-2"></i>Удалить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        function showNotification(message, type) {
+            var icon = 'mdi-check-circle-outline';
+            var bgClass = 'bg-success';
+            
+            if (type === 'error') {
+                icon = 'mdi-alert-circle-outline';
+                bgClass = 'bg-danger';
+            }
+            
+            var notification = $('<div class="toast fade show" role="alert" aria-live="assertive" aria-atomic="true">' +
+                '<div class="toast-header ' + bgClass + ' text-white">' +
+                '<i class="mdi ' + icon + ' mr-2"></i>' +
+                '<strong class="mr-auto">Уведомление</strong>' +
+                '<button type="button" class="ml-2 mb-1 close text-white" data-dismiss="toast" aria-label="Close">' +
+                '<span aria-hidden="true">&times;</span>' +
+                '</button>' +
+                '</div>' +
+                '<div class="toast-body">' + message + '</div>' +
+                '</div>');
+            
+            if ($('#toast-container').length === 0) {
+                $('body').append('<div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>');
+            }
+            
+            $('#toast-container').append(notification);
+            
+            setTimeout(function() {
+                notification.toast('hide');
+                setTimeout(function() {
+                    notification.remove();
+                }, 500);
+            }, 3000);
+        }
+        
+        $('#addPromocodeBtn').on('click', function() {
+            $('#add_activation_limit').val(1);
+            $('#add_percentage').val(10);
+            
+            $('#addPromocodeModal').modal('show');
+        });
+        
+        $('#savePromocodeBtn').on('click', function() {
+            if (!$('#add_activation_limit').val() || !$('#add_percentage').val()) {
+                showNotification('Пожалуйста, заполните все поля', 'error');
+                return;
+            }
+            
+            var activationLimit = parseInt($('#add_activation_limit').val());
+            var percentage = parseInt($('#add_percentage').val());
+            
+            if (activationLimit < 1) {
+                showNotification('Количество активаций должно быть больше 0', 'error');
+                return;
+            }
+            
+            if (percentage < 1 || percentage > 100) {
+                showNotification('Процент скидки должен быть от 1 до 100', 'error');
+                return;
+            }
+            
+            var promocodeData = {
+                activation_limit: activationLimit,
+                percentage: percentage
+            };
+            
+            $.ajax({
+                url: "{{ url_for('create_promocode') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(promocodeData),
+                success: function(response) {
+                    if (response.success) {
+                        $('#addPromocodeModal').modal('hide');
+                        
+                        showNotification('Промокод успешно создан: ' + response.promocode);
+                        
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showNotification('Ошибка: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showNotification('Произошла ошибка при создании промокода. Пожалуйста, попробуйте снова.', 'error');
+                    console.error(error);
+                }
+            });
+        });
+        
+        $('.delete-promocode').on('click', function() {
+            var code = $(this).data('code');
+            $('#delete_promocode_code').val(code);
+            $('#delete_code_display').text(code);
+            $('#deletePromocodeModal').modal('show');
+        });
+        
+        $('#confirmDeletePromocodeBtn').on('click', function() {
+            var code = $('#delete_promocode_code').val();
+            
+            $.ajax({
+                url: "{{ url_for('delete_promocode') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ code: code }),
+                success: function(response) {
+                    if (response.success) {
+                        $('#deletePromocodeModal').modal('hide');
+                        
+                        showNotification('Промокод успешно удален');
+                        
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showNotification('Ошибка: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showNotification('Произошла ошибка при удалении промокода. Пожалуйста, попробуйте снова.', 'error');
+                    console.error(error);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 

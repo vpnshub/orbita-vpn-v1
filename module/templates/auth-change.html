@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Смена пароля - Админ Панель{% endblock %}
+
+{% block page_title %}<i class="mdi mdi-lock-reset mr-2"></i>Смена пароля администратора{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Главная</a></li>
+<li class="breadcrumb-item active">Смена пароля</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-6 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="mt-0 header-title">Смена пароля администратора</h4>
+                <p class="text-muted mb-4">Заполните форму для изменения пароля учетной записи.</p>
+                
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <form method="post" action="{{ url_for('auth_change') }}">
+                    <div class="form-group">
+                        <label for="current_password">Текущий пароль</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="mdi mdi-key"></i></span>
+                            </div>
+                            <input type="password" class="form-control" id="current_password" name="current_password" placeholder="Введите текущий пароль" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="new_password">Новый пароль</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="mdi mdi-lock"></i></span>
+                            </div>
+                            <input type="password" class="form-control" id="new_password" name="new_password" placeholder="Введите новый пароль" required>
+                        </div>
+                        <small class="form-text text-muted">Пароль должен быть надежным и содержать не менее 8 символов.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm_password">Подтверждение пароля</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="mdi mdi-lock-check"></i></span>
+                            </div>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Подтвердите новый пароль" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-0 row">
+                        <div class="col-12 mt-2">
+                            <button class="btn btn-primary btn-block waves-effect waves-light" type="submit">Изменить пароль <i class="mdi mdi-check-all ml-1"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#confirm_password').on('keyup', function() {
+            var newPassword = $('#new_password').val();
+            var confirmPassword = $(this).val();
+            
+            if (newPassword === confirmPassword) {
+                $(this).removeClass('is-invalid').addClass('is-valid');
+            } else {
+                $(this).removeClass('is-valid').addClass('is-invalid');
+            }
+        });
+        
+        $('#new_password').on('keyup', function() {
+            var password = $(this).val();
+            var strength = 0;
+            
+            if (password.length >= 8) {
+                strength += 1;
+            }
+            
+            if (/\d/.test(password)) {
+                strength += 1;
+            }
+            
+            if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+                strength += 1;
+            }
+            
+            if (/[A-Z]/.test(password)) {
+                strength += 1;
+            }
+            
+            $(this).removeClass('is-valid is-invalid');
+            
+            if (password.length > 0) {
+                if (strength >= 3) {
+                    $(this).addClass('is-valid');
+                } else {
+                    $(this).addClass('is-invalid');
+                }
+            }
+        });
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,879 @@
+{% extends "base.html" %}
+
+{% block title %}VPN Сервера - Админ Панель{% endblock %}
+
+{% block page_title %}<i class="mdi mdi-server-network mr-2"></i>Управление VPN серверами{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">VPN Сервера</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    #server-wizard .body:not(.current) {
+        display: none;
+    }
+    
+    #server-wizard .steps {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+    
+    #server-wizard .steps ul {
+        display: flex;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+        justify-content: space-between;
+    }
+    
+    #server-wizard .steps ul li {
+        position: relative;
+        display: inline-block;
+        text-align: center;
+        flex: 1;
+    }
+    
+    #server-wizard .steps ul li a {
+        display: block;
+        padding: 10px 5px;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+        text-decoration: none;
+        color: #6c757d;
+        transition: all 0.3s ease;
+    }
+    
+    #server-wizard .steps ul li.current a {
+        background-color: #4a81d4;
+        color: #fff;
+    }
+    
+    #server-wizard .steps ul li .number {
+        display: inline-block;
+        width: 25px;
+        height: 25px;
+        line-height: 25px;
+        border-radius: 50%;
+        text-align: center;
+        margin-right: 5px;
+        background: rgba(0, 0, 0, 0.1);
+    }
+    
+    #server-wizard .steps ul li.current .number {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    
+    #server-wizard .steps ul li::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        background-color: #dee2e6;
+        top: 50%;
+        left: 50%;
+        z-index: -1;
+    }
+    
+    #server-wizard .steps ul li:last-child::after {
+        display: none;
+    }
+    
+    #server-wizard .steps ul li.current::after {
+        background-color: #4a81d4;
+    }
+    
+    #server-wizard .actions {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    #server-wizard .actions ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        justify-content: space-between;
+    }
+    
+    #server-wizard .actions ul li {
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="mt-0 header-title">Список VPN серверов</h4>
+                        <p class="text-muted">Настройка серверов для подключения пользователей</p>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-primary btn-square btn-outline-dashed waves-effect waves-light" id="addServerBtn">
+                            <i class="mdi mdi-plus mr-2"></i>Добавить сервер
+                        </button>
+                    </div>
+                </div>
+
+                <div class="alert alert-dark border-0">
+                    <i class="mdi mdi-information-outline mr-2"></i>
+                    Настройка VPN-серверов для предоставления пользователям доступа через различные протоколы. Для корректной работы требуется ввести все обязательные параметры подключения.
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0">
+                        <thead>
+                            <tr>
+                                <th>Наименование</th>
+                                <th>IP</th>
+                                <th>Протокол</th>
+                                <th>URL</th>
+                                <th>Входящий поток</th>
+                                <th class="text-center">Статус</th>
+                                <th class="text-center">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if servers %}
+                                {% for server in servers %}
+                                <tr>
+                                    <td>
+                                        <a href="javascript:void(0);" class="server-name-link" data-id="{{ server.id }}">
+                                            {{ server.name }}
+                                        </a>
+                                    </td>
+                                    <td>{{ server.ip or 'Не указан' }}</td>
+                                    <td>
+                                        {% if server.protocol == 'vless' %}
+                                            <span class="badge badge-primary">VLESS</span>
+                                        {% elif server.protocol == 'shadowsocks' %}
+                                            <span class="badge badge-info">Shadowsocks</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">{{ server.protocol }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ server.url }}</td>
+                                    <td class="text-center">{{ server.inbound_id }}</td>
+                                    <td class="text-center">
+                                        {% if server.is_enable %}
+                                            <span class="badge badge-success">Активен</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">Отключен</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-primary btn-square btn-outline-dashed waves-effect waves-light edit-server" 
+                                                data-id="{{ server.id }}" data-name="{{ server.name }}"
+                                                data-ip="{{ server.ip }}" data-port="{{ server.port }}"
+                                                data-inbound-id="{{ server.inbound_id }}"
+                                                data-inbound-id-promo="{{ server.inbound_id_promo }}"
+                                                data-is-enable="{{ server.is_enable }}">
+                                                <i class="mdi mdi-pencil mr-2"></i>Редактировать
+                                        </button>
+                                        <button type="button" class="btn btn-danger btn-square btn-outline-dashed waves-effect waves-light delete-server" 
+                                                data-id="{{ server.id }}" data-name="{{ server.name }}">
+                                                <i class="mdi mdi-power mr-2"></i>Удалить
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center">
+                                        {% if error_message %}
+                                            <div class="alert alert-danger">{{ error_message }}</div>
+                                        {% else %}
+                                            Нет доступных серверов или соединение с API не установлено.
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="addServerModal" tabindex="-1" role="dialog" aria-labelledby="addServerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addServerModalLabel">Добавление нового VPN сервера</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="server-wizard" class="form-wizard-wrapper form-wizard-wrapper-custom">
+                    <div class="mb-3">
+                        <div class="steps clearfix">
+                            <ul role="tablist">
+                                <li role="tab" aria-disabled="false" class="first current" aria-selected="true">
+                                    <a id="server-wizard-t-0" href="#server-wizard-step-1" aria-controls="server-wizard-p-0">
+                                        
+                                        <span class="number">1</span> 
+                                        <span class="d-none d-sm-inline">Основная информация</span>
+                                    </a>
+                                </li>
+                                <li role="tab" aria-disabled="false">
+                                    <a id="server-wizard-t-1" href="#server-wizard-step-2" aria-controls="server-wizard-p-1">
+                                        <span class="number">2</span> 
+                                        <span class="d-none d-sm-inline">Параметры подключения</span>
+                                    </a>
+                                </li>
+                                <li role="tab" aria-disabled="false">
+                                    <a id="server-wizard-t-2" href="#server-wizard-step-3" aria-controls="server-wizard-p-2">
+                                        <span class="number">3</span> 
+                                        <span class="d-none d-sm-inline">Учетные данные</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="content clearfix">
+                            <div id="server-wizard-step-1" role="tabpanel" aria-labelledby="server-wizard-step-1" class="body current">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="form-group">
+                                            <label for="add_name">Наименование сервера</label>
+                                            <input type="text" class="form-control" id="add_name" placeholder="Например: Сервер Нидерланды" required>
+                                            <small class="form-text text-muted">Уникальное название сервера для идентификации в системе</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <div class="form-group">
+                                            <label for="add_protocol">Протокол подключения</label>
+                                            <select class="form-control" id="add_protocol">
+                                                <option value="vless">VLESS</option>
+                                                <option value="shadowsocks">Shadowsocks</option>
+                                            </select>
+                                            <small class="form-text text-muted">Протокол VPN подключения для пользователей</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="form-group">
+                                            <label for="add_ip">IP-адрес (опционально)</label>
+                                            <input type="text" class="form-control" id="add_ip" placeholder="Например: 123.45.67.89">
+                                            <small class="form-text text-muted">IP-адрес сервера, если отличается от DNS</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="server-wizard-step-2" role="tabpanel" aria-labelledby="server-wizard-step-2" class="body">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="form-group">
+                                            <label for="add_url">URL сервера</label>
+                                            <input type="text" class="form-control" id="add_url" placeholder="Например: https://vpnserver.example.com" required>
+                                            <small class="form-text text-muted">Полный URL сервера с протоколом (http/https)</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <div class="form-group">
+                                            <label for="add_port">Порт</label>
+                                            <input type="text" class="form-control" id="add_port" placeholder="Например: 443" required>
+                                            <small class="form-text text-muted">Порт для подключения к серверу</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="form-group">
+                                            <label for="add_secret_path">Путь к панели</label>
+                                            <input type="text" class="form-control" id="add_secret_path" placeholder="Например: OCCdskdb" required>
+                                            <small class="form-text text-muted">Секретный путь к панели управления, http://example.com/OCCdskdb/panel (без /panel)</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="server-wizard-step-3" role="tabpanel" aria-labelledby="server-wizard-step-3" class="body">
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <div class="form-group">
+                                            <label for="add_username">Логин</label>
+                                            <input type="text" class="form-control" id="add_username" placeholder="Имя пользователя" required>
+                                            <small class="form-text text-muted">Имя пользователя для авторизации</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="form-group">
+                                            <label for="add_password">Пароль</label>
+                                            <input type="password" class="form-control" id="add_password" placeholder="Пароль" required>
+                                            <small class="form-text text-muted">Пароль для авторизации</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="form-group">
+                                            <label for="add_inbound_id">Входящий поток (ID)</label>
+                                            <input type="number" class="form-control" id="add_inbound_id" min="1" placeholder="Например: 2" required>
+                                            <small class="form-text text-muted">Идентификатор входящего потока на сервере</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="alert alert-warning alert-dismissible fade show">
+                                            <i class="mdi mdi-information-outline mr-2"></i>
+                                            Все поля на этой странице являются конфиденциальными и будут использоваться только для подключения к VPN-серверу.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="actions clearfix">
+                            <ul role="menu" aria-label="Pagination">
+                                <li class="wizard-previous">
+                                    <a href="#previous" role="menuitem" class="btn btn-secondary btn-square btn-outline-dashed">Назад</a>
+                                </li>
+                                <li class="wizard-next" id="server-next-btn">
+                                    <a href="#next" role="menuitem" class="btn btn-primary btn-square btn-outline-dashed">Далее</a>
+                                </li>
+                                <li class="wizard-finish" style="display: none;" id="server-finish-btn">
+                                    <a href="#finish" role="menuitem" class="btn btn-primary btn-square btn-outline-dashed">
+                                        <i class="mdi mdi-check-all mr-2"></i>Создать сервер
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteServerModal" tabindex="-1" role="dialog" aria-labelledby="deleteServerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteServerModalLabel">Подтверждение удаления</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Вы действительно хотите удалить сервер <strong id="delete_server_name"></strong>?</p>
+                <input type="hidden" id="delete_server_id">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-square btn-outline-dashed waves-effect waves-light" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger btn-square btn-outline-dashed waves-effect waves-light" id="confirmDeleteServerBtn">
+                    <i class="mdi mdi-delete mr-2"></i>Удалить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="serverInfoModal" tabindex="-1" role="dialog" aria-labelledby="serverInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="serverInfoModalLabel">Информация о сервере</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="card-header bg-primary">
+                        <h4 class="text-white mb-0" id="server_info_name"></h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>IP-адрес:</strong></div>
+                            <div class="col-md-8" id="server_info_ip">-</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>Порт:</strong></div>
+                            <div class="col-md-8" id="server_info_port"></div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>URL:</strong></div>
+                            <div class="col-md-8" id="server_info_url"></div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>Путь к панели:</strong></div>
+                            <div class="col-md-8" id="server_secret_path"></div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>Имя пользователя:</strong></div>
+                            <div class="col-md-8" id="server_info_username"></div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>Пароль:</strong></div>
+                            <div class="col-md-8" id="server_info_password"></div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>ID входящего потока:</strong></div>
+                            <div class="col-md-8" id="server_info_inbound_id"></div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>Протокол:</strong></div>
+                            <div class="col-md-8" id="server_info_protocol"></div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>Статус:</strong></div>
+                            <div class="col-md-8" id="server_info_status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="editServerModal" tabindex="-1" role="dialog" aria-labelledby="editServerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editServerModalLabel">Редактирование сервера</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editServerForm">
+                    <input type="hidden" id="edit_server_id">
+                    <div class="form-group">
+                        <label for="edit_server_name">Наименование</label>
+                        <input type="text" class="form-control" id="edit_server_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_server_ip">IP адрес</label>
+                        <input type="text" class="form-control" id="edit_server_ip" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_server_port">Порт</label>
+                        <input type="text" class="form-control" id="edit_server_port" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_server_inbound_id">ID входящего потока</label>
+                        <input type="number" class="form-control" id="edit_server_inbound_id" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_server_inbound_id_promo">ID промо-входящего потока (необязательно)</label>
+                        <input type="number" class="form-control" id="edit_server_inbound_id_promo">
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="edit_server_is_enable">
+                        <label class="form-check-label" for="edit_server_is_enable">Активен</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="saveEditServerBtn">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        var currentStep = 1;
+        var totalSteps = 3;
+        
+        $('#server-wizard-step-2, #server-wizard-step-3').removeClass('current');
+        $('#server-wizard-step-1').addClass('current');
+        $('.steps ul li:first-child').addClass('current');
+        $('.wizard-previous').hide();
+        $('.wizard-finish').hide();
+        
+        $('#addServerBtn').on('click', function() {
+            currentStep = 1;
+            updateWizardState();
+            $('#addServerModal').modal('show');
+        });
+        
+        function updateWizardState() {
+            $('#server-wizard-step-1, #server-wizard-step-2, #server-wizard-step-3').removeClass('current');
+            
+            $('#server-wizard-step-' + currentStep).addClass('current');
+            
+            $('.steps ul li').removeClass('current');
+            $('.steps ul li:nth-child(' + currentStep + ')').addClass('current');
+            
+            if (currentStep == 1) {
+                $('.wizard-previous').hide();
+            } else {
+                $('.wizard-previous').show();
+            }
+            
+            if (currentStep == totalSteps) {
+                $('.wizard-next').hide();
+                $('.wizard-finish').show();
+            } else {
+                $('.wizard-next').show();
+                $('.wizard-finish').hide();
+            }
+
+            console.log('Текущий шаг:', currentStep);
+        }
+        
+        function showNotification(message, type) {
+            var icon = 'mdi-check-circle-outline';
+            var bgClass = 'bg-success';
+            
+            if (type === 'error') {
+                icon = 'mdi-alert-circle-outline';
+                bgClass = 'bg-danger';
+            }
+            
+            var notification = $('<div class="toast fade show" role="alert" aria-live="assertive" aria-atomic="true">' +
+                '<div class="toast-header ' + bgClass + ' text-white">' +
+                '<i class="mdi ' + icon + ' mr-2"></i>' +
+                '<strong class="mr-auto">Уведомление</strong>' +
+                '<button type="button" class="ml-2 mb-1 close text-white" data-dismiss="toast" aria-label="Close">' +
+                '<span aria-hidden="true">&times;</span>' +
+                '</button>' +
+                '</div>' +
+                '<div class="toast-body">' + message + '</div>' +
+                '</div>');
+            
+            if ($('#toast-container').length === 0) {
+                $('body').append('<div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>');
+            }
+            
+            $('#toast-container').append(notification);
+            
+            setTimeout(function() {
+                notification.toast('hide');
+                setTimeout(function() {
+                    notification.remove();
+                }, 500);
+            }, 3000);
+        }
+        
+
+        $('.wizard-next a').on('click', function(e) {
+            e.preventDefault();
+            
+
+            var isValid = validateStep(currentStep);
+            if (!isValid) return;
+            
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateWizardState();
+            }
+        });
+        
+
+        $('.wizard-previous a').on('click', function(e) {
+            e.preventDefault();
+            if (currentStep > 1) {
+                currentStep--;
+                updateWizardState();
+            }
+        });
+        
+        function isValidUrl(url) {
+            return /^https?:\/\/.+/.test(url);
+        }
+        
+
+        function validateStep(step) {
+            var isValid = true;
+            
+            if (step === 1) {
+                if (!$('#add_name').val()) {
+                    showNotification('Пожалуйста, введите наименование сервера', 'error');
+                    isValid = false;
+                }
+            }
+            else if (step === 2) {
+                var url = $('#add_url').val();
+                if (!url) {
+                    showNotification('Пожалуйста, введите URL сервера', 'error');
+                    isValid = false;
+                } else if (!isValidUrl(url)) {
+                    showNotification('URL должен начинаться с http:// или https://', 'error');
+                    isValid = false;
+                }
+                
+                if (!$('#add_port').val()) {
+                    showNotification('Пожалуйста, введите порт', 'error');
+                    isValid = false;
+                }
+                if (!$('#add_secret_path').val()) {
+                    showNotification('Пожалуйста, введите путь к панели', 'error');
+                    isValid = false;
+                }
+            }
+            
+            return isValid;
+        }
+        
+
+        $('.wizard-finish a').on('click', function(e) {
+            e.preventDefault();
+            
+
+            if (!$('#add_username').val()) {
+                showNotification('Пожалуйста, введите логин', 'error');
+                return;
+            }
+            if (!$('#add_password').val()) {
+                showNotification('Пожалуйста, введите пароль', 'error');
+                return;
+            }
+            if (!$('#add_inbound_id').val()) {
+                showNotification('Пожалуйста, введите ID входящего потока', 'error');
+                return;
+            }
+            
+
+            var serverData = {
+                name: $('#add_name').val(),
+                url: $('#add_url').val(),
+                port: $('#add_port').val(),
+                secret_path: $('#add_secret_path').val(),
+                username: $('#add_username').val(),
+                password: $('#add_password').val(),
+                inbound_id: parseInt($('#add_inbound_id').val()),
+                protocol: $('#add_protocol').val(),
+                ip: $('#add_ip').val()
+            };
+            
+
+            $.ajax({
+                url: "{{ url_for('create_server') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(serverData),
+                success: function(response) {
+                    if (response.success) {
+
+                        $('#addServerModal').modal('hide');
+                        
+ 
+                        showNotification('Сервер успешно создан');
+                        
+       
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showNotification('Ошибка: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showNotification('Произошла ошибка при создании сервера. Пожалуйста, попробуйте снова.', 'error');
+                    console.error(error);
+                }
+            });
+        });
+        
+       
+        updateWizardState();
+        
+      
+        $('.delete-server').on('click', function() {
+            var id = $(this).data('id');
+            var name = $(this).data('name');
+            
+
+            $('#delete_server_id').val(id);
+            $('#delete_server_name').text(name);
+            
+            
+            $('#deleteServerModal').modal('show');
+        });
+        
+        
+        $('#confirmDeleteServerBtn').on('click', function() {
+            var id = $('#delete_server_id').val();
+            
+                
+            $.ajax({
+                url: "{{ url_for('delete_server') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ id: id }),
+                success: function(response) {
+                    if (response.success) {
+                       
+                        $('#deleteServerModal').modal('hide');
+                        
+                       
+                        showNotification('Сервер успешно удален');
+                        
+                       
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showNotification('Ошибка: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showNotification('Произошла ошибка при удалении сервера. Пожалуйста, попробуйте снова.', 'error');
+                    console.error(error);
+                }
+            });
+        });
+
+       
+        $('.server-name-link').on('click', function() {
+            var serverId = $(this).data('id');
+            
+            
+            $.ajax({
+                url: "{{ url_for('get_server_info') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ id: serverId }),
+                success: function(response) {
+                    if (response.success) {
+                        var server = response.data;
+                        
+                        
+                        $('#server_info_name').text(server.name);
+                        $('#server_info_ip').text(server.ip || 'Не указан');
+                        $('#server_info_port').text(server.port);
+                        $('#server_info_url').text(server.url);
+                        $('#server_secret_path').text(server.secret_path);
+                        $('#server_info_username').text(server.username);
+                        $('#server_info_password').text(server.password);
+                        $('#server_info_inbound_id').text(server.inbound_id);
+                        
+                       
+                        var protocolText = server.protocol;
+                        if (server.protocol === 'vless') {
+                            protocolText = '<span class="badge badge-primary">VLESS</span>';
+                        } else if (server.protocol === 'shadowsocks') {
+                            protocolText = '<span class="badge badge-info">Shadowsocks</span>';
+                        }
+                        $('#server_info_protocol').html(protocolText);
+                        
+                       
+                        var statusText = server.is_enable ? 
+                            '<span class="badge badge-success">Активен</span>' : 
+                            '<span class="badge badge-danger">Отключен</span>';
+                        $('#server_info_status').html(statusText);
+                        
+                       
+                        $('#serverInfoModal').modal('show');
+                    } else {
+                        showNotification('Ошибка: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showNotification('Произошла ошибка при получении информации о сервере', 'error');
+                    console.error(error);
+                }
+            });
+        });
+
+       
+        $('.edit-server').on('click', function() {
+            var id = $(this).data('id');
+            var name = $(this).data('name');
+            var ip = $(this).data('ip');
+            var port = $(this).data('port');
+            var inboundId = $(this).data('inbound-id');
+            var inboundIdPromo = $(this).data('inbound-id-promo');
+            var isEnable = $(this).data('is-enable');
+            
+            
+            $('#edit_server_id').val(id);
+            $('#edit_server_name').val(name);
+            $('#edit_server_ip').val(ip);
+            $('#edit_server_port').val(port);
+            $('#edit_server_inbound_id').val(inboundId);
+            $('#edit_server_inbound_id_promo').val(inboundIdPromo || '');
+            $('#edit_server_is_enable').prop('checked', isEnable == 1);
+            
+            
+            $('#editServerModal').modal('show');
+        });
+        
+        
+        $('#saveEditServerBtn').on('click', function() {
+            var id = $('#edit_server_id').val();
+            var formData = {
+                name: $('#edit_server_name').val().trim(),
+                ip: $('#edit_server_ip').val().trim(),
+                port: $('#edit_server_port').val().trim(),
+                inbound_id: parseInt($('#edit_server_inbound_id').val()),
+                is_enable: $('#edit_server_is_enable').is(':checked') ? 1 : 0
+            };
+            
+            
+            var inboundIdPromo = $('#edit_server_inbound_id_promo').val().trim();
+            if (inboundIdPromo) {
+                formData.inbound_id_promo = parseInt(inboundIdPromo);
+            }
+            
+            
+            if (!formData.name || !formData.ip || !formData.port) {
+                showNotification('Пожалуйста, заполните все обязательные поля', 'error');
+                return;
+            }
+            
+            
+            var $btn = $(this);
+            var originalHtml = $btn.html();
+            $btn.html('<i class="mdi mdi-loading mdi-spin"></i> Сохранение...');
+            $btn.prop('disabled', true);
+            
+            
+            $.ajax({
+                url: "{{ url_for('update_server') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    id: id,
+                    ...formData
+                }),
+                success: function(response) {
+                    $btn.html(originalHtml);
+                    $btn.prop('disabled', false);
+                    
+                    if (response.success) {
+                        $('#editServerModal').modal('hide');
+                        showNotification(response.message || 'Сервер успешно обновлен');
+                        
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showNotification('Ошибка: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $btn.html(originalHtml);
+                    $btn.prop('disabled', false);
+                    
+                    showNotification('Произошла ошибка при обновлении сервера. Пожалуйста, попробуйте снова.', 'error');
+                    console.error(error);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 

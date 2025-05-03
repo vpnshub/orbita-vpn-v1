@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+
+{% block title %}Настройки API - Админ Панель{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='plugins/form-wizard/css/smart_wizard.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ url_for('static', filename='plugins/form-wizard/css/smart_wizard_theme_arrows.css') }}" rel="stylesheet" type="text/css" />
+<style>
+    .sw-theme-arrows > ul.step-anchor {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    
+    .sw-main .sw-container {
+        min-height: 300px;
+    }
+    
+    .form-section {
+        padding: 20px 10px;
+    }
+    
+    #smart_wizard_arrows .nav-link {
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}<i class="mdi mdi-settings-outline mr-2"></i>Настройки API{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Настройки API</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="mt-0 header-title">Мастер настройки API</h4>
+                <p class="text-muted mb-4">Заполните форму для создания нового API подключения.</p>
+                
+                <div id="smart_wizard_arrows">
+                    <ul class="nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#step-1">
+                                <strong>Шаг 1</strong><br />
+                                <small>Название API</small>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#step-2">
+                                <strong>Шаг 2</strong><br />
+                                <small>URL API</small>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#step-3">
+                                <strong>Шаг 3</strong><br />
+                                <small>Ключ API</small>
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content">
+                        <div id="step-1" class="tab-pane" role="tabpanel" aria-labelledby="step-1">
+                            <div class="form-section">
+                                <h4 class="mb-3">Информация об API</h4>
+                                <form id="form-step-1">
+                                    <div class="form-group">
+                                        <label for="api_name">Название API</label>
+                                        <input type="text" class="form-control" id="api_name" name="api_name" placeholder="Введите название для API ключа">
+                                        <small class="form-text text-muted"></small>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <div id="step-2" class="tab-pane" role="tabpanel" aria-labelledby="step-2">
+                            <div class="form-section">
+                                <h4 class="mb-3">URL подключения</h4>
+                                <form id="form-step-2">
+                                    <div class="form-group">
+                                        <label for="api_url">URL API</label>
+                                        <input type="url" class="form-control" id="api_url" name="api_url" placeholder="https://api.example.com/v1/">
+                                        <small class="form-text text-muted">Полный URL API-сервиса</small>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <div id="step-3" class="tab-pane" role="tabpanel" aria-labelledby="step-3">
+                            <div class="form-section">
+                                <h4 class="mb-3">Ключ авторизации</h4>
+                                <form id="form-step-3">
+                                    <div class="form-group">
+                                        <label for="api_key">API ключ</label>
+                                        <input type="text" class="form-control" id="api_key" name="api_key" placeholder="Введите API ключ">
+                                        <small class="form-text text-muted">Ключ для авторизации запросов к API</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" id="is_active" name="is_active" checked>
+                                            <label class="custom-control-label" for="is_active">Активировать API</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group mt-4">
+                                        <button type="button" id="save_api_settings" class="btn btn-primary">Сохранить настройки API</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="mt-0 header-title">Существующие API</h4>
+                <p class="text-muted mb-3">Список настроенных API сервисов</p>
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0">
+                        <thead>
+                            <tr>
+                                <th>Название API</th>
+                                <th>API ключ</th>
+                                <th>URL</th>
+                                <th>Статус</th>
+                                <th>Дата создания</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for setting in api_settings %}
+                            <tr>
+                                <td>{{ setting.api_name }}</td>
+                                <td>{{ setting.api_key[:10] }}***</td>
+                                <td>{{ setting.api_url }}</td>
+                                <td>
+                                    {% if setting.is_active %}
+                                    <span class="badge badge-success">Активно</span>
+                                    {% else %}
+                                    <span class="badge badge-danger">Неактивно</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ setting.created_at.strftime('%d.%m.%Y %H:%M') if setting.created_at else 'Нет данных' }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-success btn-square btn-outline-dashed waves-effect waves-light edit-api" 
+                                           data-id="{{ setting.id }}"
+                                           data-name="{{ setting.api_name }}"
+                                           data-url="{{ setting.api_url }}"
+                                           data-key="{{ setting.api_key }}"
+                                           data-active="{{ 'true' if setting.is_active else 'false' }}">
+                                           <i class="mdi mdi-pencil mr-2"></i>Редактировать
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-square btn-outline-dashed waves-effect waves-light delete-api" data-id="{{ setting.id }}"><i class="mdi mdi-power mr-2"></i>Удалить</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            
+                            {% if not api_settings %}
+                            <tr>
+                                <td colspan="6" class="text-center">Нет доступных API. Используйте форму выше для добавления нового API.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="editApiModal" tabindex="-1" role="dialog" aria-labelledby="editApiModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editApiModalLabel">Редактирование API</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editApiForm">
+                    <input type="hidden" id="edit_api_id">
+                    <div class="form-group">
+                        <label for="edit_api_name">Название API</label>
+                        <input type="text" class="form-control" id="edit_api_name" name="edit_api_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_api_url">URL API</label>
+                        <input type="url" class="form-control" id="edit_api_url" name="edit_api_url" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_api_key">API ключ</label>
+                        <input type="text" class="form-control" id="edit_api_key" name="edit_api_key" required>
+                    </div>
+                    <div class="form-group">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="edit_is_active" name="edit_is_active">
+                            <label class="custom-control-label" for="edit_is_active">Активировать API</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отменить</button>
+                <button type="button" class="btn btn-primary" id="updateApiBtn">Сохранить изменения</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="deleteApiModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Подтверждение удаления</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Вы действительно хотите удалить этот API?</p>
+                <input type="hidden" id="delete_api_id">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-square btn-outline-dashed waves-effect waves-light" data-dismiss="modal">Отменить</button>
+                <button type="button" class="btn btn-danger btn-square btn-outline-dashed waves-effect waves-light" id="confirmDeleteBtn"><i class="mdi mdi-power mr-2"></i>Удалить</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='plugins/form-wizard/js/jquery.smartWizard.min.js') }}"></script>
+<script>
+    $(document).ready(function(){
+        $('#smart_wizard_arrows').smartWizard({
+            selected: 0,
+            theme: 'arrows',
+            transitionEffect: 'fade',
+            showStepURLhash: false,
+            toolbarSettings: {
+                toolbarPosition: 'bottom',
+                toolbarButtonPosition: 'end',
+                showNextButton: true,
+                showPreviousButton: true
+            }
+        });
+        
+        $("#smart_wizard_arrows").on("leaveStep", function(e, anchorObject, currentStepIndex, nextStepIndex, stepDirection) {
+            if (stepDirection === 'forward') {
+                var isValid = true;
+                
+                if (currentStepIndex === 0) {
+                    if (!$('#api_name').val()) {
+                        alert('Пожалуйста, введите название API');
+                        return false;
+                    }
+                }
+                
+                if (currentStepIndex === 1) {
+                    if (!$('#api_url').val()) {
+                        alert('Пожалуйста, введите URL API');
+                        return false;
+                    }
+                }
+                
+                return isValid;
+            }
+            return true;
+        });
+        
+        $('#save_api_settings').on('click', function() {
+            if (!$('#api_key').val()) {
+                alert('Пожалуйста, введите ключ API');
+                return;
+            }
+            
+            var apiData = {
+                api_name: $('#api_name').val(),
+                api_url: $('#api_url').val(),
+                api_key: $('#api_key').val(),
+                is_active: $('#is_active').is(':checked')
+            };
+            
+            $.ajax({
+                url: "{{ url_for('save_api_settings') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(apiData),
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('Ошибка: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Произошла ошибка при сохранении. Пожалуйста, попробуйте снова.');
+                    console.error(error);
+                }
+            });
+        });
+        
+        $('.edit-api').on('click', function() {
+            var id = $(this).data('id');
+            var name = $(this).data('name');
+            var url = $(this).data('url');
+            var key = $(this).data('key');
+            var isActive = $(this).data('active') === 'true';
+            
+            $('#edit_api_id').val(id);
+            $('#edit_api_name').val(name);
+            $('#edit_api_url').val(url);
+            $('#edit_api_key').val(key);
+            $('#edit_is_active').prop('checked', isActive);
+            
+            $('#editApiModal').modal('show');
+        });
+        
+        $('#updateApiBtn').on('click', function() {
+            if (!$('#edit_api_name').val() || !$('#edit_api_url').val() || !$('#edit_api_key').val()) {
+                alert('Пожалуйста, заполните все поля формы');
+                return;
+            }
+            
+            var apiData = {
+                id: $('#edit_api_id').val(),
+                api_name: $('#edit_api_name').val(),
+                api_url: $('#edit_api_url').val(),
+                api_key: $('#edit_api_key').val(),
+                is_active: $('#edit_is_active').is(':checked')
+            };
+            
+            $.ajax({
+                url: "{{ url_for('update_api_settings') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(apiData),
+                success: function(response) {
+                    if (response.success) {
+                        $('#editApiModal').modal('hide');
+                        
+                        location.reload();
+                    } else {
+                        alert('Ошибка: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Произошла ошибка при обновлении. Пожалуйста, попробуйте снова.');
+                    console.error(error);
+                }
+            });
+        });
+        
+        $('.delete-api').on('click', function() {
+            var id = $(this).data('id');
+            $('#delete_api_id').val(id);
+            $('#deleteApiModal').modal('show');
+        });
+        
+        $('#confirmDeleteBtn').on('click', function() {
+            var id = $('#delete_api_id').val();
+            
+            $.ajax({
+                url: "{{ url_for('delete_api_settings') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ id: id }),
+                success: function(response) {
+                    if (response.success) {
+                        $('#deleteApiModal').modal('hide');
+                        
+                        location.reload();
+                    } else {
+                        alert('Ошибка: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Произошла ошибка при удалении. Пожалуйста, попробуйте снова.');
+                    console.error(error);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 

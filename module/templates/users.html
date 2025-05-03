@@ -1,0 +1,1030 @@
+{% extends "base.html" %}
+
+{% block title %}Пользователи - Админ Панель{% endblock %}
+
+{% block page_title %}<i class="mdi mdi-account-group mr-2"></i>Управление пользователями{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Пользователи</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="mt-0 header-title">Список пользователей</h4>
+                        <p class="text-muted">
+                            Управление учетными записями пользователей в системе 
+                            {% if total_items %}
+                            <span class="badge badge-info">Всего: {{ total_items }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="d-flex">
+                        <div class="mr-3">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchTelegramId" placeholder="Поиск по Telegram ID">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary btn-square btn-outline-dashed" type="button" id="searchUserBtn">
+                                        <i class="mdi mdi-magnify"></i> Найти
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-square btn-outline-dashed waves-effect waves-light" id="addUserBtn">
+                            <i class="mdi mdi-plus mr-2"></i>Добавить пользователя
+                        </button>
+                    </div>
+                </div>
+
+                <div class="alert alert-dark border-0">
+                    <i class="mdi mdi-information-outline mr-2"></i>
+                    Страница управления пользователями позволяет просматривать информацию о пользователях, их балансе, реферальной активности и платежах. Вы также можете блокировать и разблокировать пользователей.
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0">
+                        <thead>
+                            <tr>
+                                <th>Пользователь</th>
+                                <th class="text-center">Telegram ID</th>
+                                <th class="text-center">Рефералов</th>
+                                <th class="text-center">Депозит</th>
+                                <th class="text-center">Платежи</th>
+                                <th class="text-center">Дата регистрации</th>
+                                <th class="text-center">Пробный период</th>
+                                <th class="text-center">Статус</th>
+                                <th class="text-center">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if users %}
+                                {% for user in users %}
+                                <tr>
+                                    <td>
+                                        {% if user.username %}
+                                            <a href="javascript:void(0);" class="user-details-link" data-telegram-id="{{ user.telegram_id }}">
+                                                {{ user.username }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">Без имени</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center"><a href="javascript:void(0);" class="user-details-link" data-telegram-id="{{ user.telegram_id }}">{{ user.telegram_id }}</a></td>
+                                    <td class="text-center">{{ user.referral_count or 0 }}</td>
+                                    <td class="text-center">{{ user.balance or 0 }} ₽</td>
+                                    <td class="text-center">{{ user.total_payments or 0 }} ₽</td>
+                                    <td class="text-center">{{ user.date }}</td>
+                                    <td class="text-center">
+                                        <span class="{{ 'text-danger' if user.trial_period == 1 else 'text-success' }}">
+                                            {{ 'Использован' if user.trial_period == 1 else 'Доступен' }}
+                                        </span>
+                                    </td>
+                                    
+                                    
+                                    
+                                    <td class="text-center">
+                                        {% if user.is_enable == 1 %}
+                                            <span class="badge badge-success">Активен</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">Заблокирован</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if user.is_enable == 1 %}
+                                            <button type="button" class="btn btn-danger btn-square btn-outline-dashed waves-effect waves-light ban-user" 
+                                                    data-telegram-id="{{ user.telegram_id }}" data-username="{{ user.username }}">
+                                                    <i class="mdi mdi-cancel mr-2"></i>Заблокировать
+                                            </button>
+                                        {% else %}
+                                            <button type="button" class="btn btn-success btn-square btn-outline-dashed waves-effect waves-light unban-user" 
+                                                    data-telegram-id="{{ user.telegram_id }}" data-username="{{ user.username }}">
+                                                    <i class="mdi mdi-check-circle-outline mr-2"></i>Разблокировать
+                                            </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="8" class="text-center">
+                                        {% if error_message %}
+                                            <div class="alert alert-danger">{{ error_message }}</div>
+                                        {% else %}
+                                            Нет доступных пользователей или соединение с API не установлено.
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                    
+                    {% if total_pages > 1 %}
+                    <div class="text-center text-muted mt-2 mb-3">
+                        Показано {{ users|length }} из {{ total_items }} пользователей
+                    </div>
+                    <div class="d-flex justify-content-center">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination">
+                                <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+                                    <a class="page-link" href="{{ url_for('users', page=current_page-1) if current_page > 1 else '#' }}" tabindex="-1">
+                                        Предыдущая
+                                    </a>
+                                </li>
+                                
+                                <li class="page-item {% if current_page == 1 %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('users', page=1) }}">1</a>
+                                </li>
+                                
+                                {% if current_page > 4 %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% endif %}
+                                
+                                {% for pg in range(current_page-2, current_page+3) %}
+                                    {% if pg > 1 and pg < total_pages %}
+                                        <li class="page-item {% if pg == current_page %}active{% endif %}">
+                                            <a class="page-link" href="{{ url_for('users', page=pg) }}">
+                                                {{ pg }}
+                                                {% if pg == current_page %}<span class="sr-only">(текущая)</span>{% endif %}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if current_page < total_pages - 3 %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% endif %}
+                                
+                                {% if total_pages > 1 %}
+                                <li class="page-item {% if current_page == total_pages %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('users', page=total_pages) }}">{{ total_pages }}</a>
+                                </li>
+                                {% endif %}
+                                
+                                <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+                                    <a class="page-link" href="{{ url_for('users', page=current_page+1) if current_page < total_pages else '#' }}">
+                                        Следующая
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                    
+                    <div class="text-center text-muted mt-2">
+                        Всего найдено: {{ total_items }} пользователей
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addUserModal" tabindex="-1" role="dialog" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addUserModalLabel">Добавление пользователя</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="form-group">
+                        <label for="add_email">Email</label>
+                        <input type="email" class="form-control" id="add_email" placeholder="Введите email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="add_server_id">Сервер</label>
+                        <select class="form-control" id="add_server_id" required>
+                            <option value="">Выберите сервер</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="add_tariff_id">Тариф</label>
+                        <select class="form-control" id="add_tariff_id" required>
+                            <option value="">Выберите тариф</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="add_telegram_id">Telegram ID</label>
+                        <input type="number" class="form-control" id="add_telegram_id" placeholder="Введите Telegram ID" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-square btn-outline-dashed waves-effect waves-light" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary btn-square btn-outline-dashed waves-effect waves-light" id="saveUserBtn">
+                    <i class="mdi mdi-content-save mr-2"></i>Сохранить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="banUserModal" tabindex="-1" role="dialog" aria-labelledby="banUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="banUserModalLabel">Блокировка пользователя</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите заблокировать пользователя <span id="ban_username_display" class="font-weight-bold"></span>?</p>
+                <p class="text-danger">Заблокированный пользователь не сможет использовать бота и все его функции.</p>
+                <input type="hidden" id="ban_telegram_id">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-square btn-outline-dashed waves-effect waves-light" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger btn-square btn-outline-dashed waves-effect waves-light" id="confirmBanUserBtn">
+                    <i class="mdi mdi-cancel mr-2"></i>Заблокировать
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="unbanUserModal" tabindex="-1" role="dialog" aria-labelledby="unbanUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="unbanUserModalLabel">Разблокировка пользователя</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите разблокировать пользователя <span id="unban_username_display" class="font-weight-bold"></span>?</p>
+                <p>Пользователь снова получит доступ ко всем функциям бота.</p>
+                <input type="hidden" id="unban_telegram_id">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-square btn-outline-dashed waves-effect waves-light" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-success btn-square btn-outline-dashed waves-effect waves-light" id="confirmUnbanUserBtn">
+                    <i class="mdi mdi-check-circle-outline mr-2"></i>Разблокировать
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="userDetailsModal" tabindex="-1" role="dialog" aria-labelledby="userDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userDetailsModalLabel">Информация о пользователе</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="mb-3">Основная информация</h5>
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <th scope="row">Имя пользователя</th>
+                                    <td id="user_details_username"></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Telegram ID</th>
+                                    <td id="user_details_telegram_id"></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Дата регистрации</th>
+                                    <td id="user_details_date"></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Пробный период</th>
+                                    <td id="user_details_trial_period"></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Реферальный код</th>
+                                    <td id="user_details_referral_code"></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Количество рефералов</th>
+                                    <td id="user_details_referral_count"></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Депозит</th>
+                                    <td id="user_details_balance"></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Платежи</th>
+                                    <td id="user_details_payments"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="mb-3">Действия</h5>
+                        <div class="btn-group-vertical w-100">
+                            <button type="button" class="btn btn-primary btn-square btn-outline-dashed waves-effect waves-light mb-2" id="user_details_add_balance_btn">
+                                <i class="mdi mdi-cash-plus mr-2"></i>Пополнить баланс
+                            </button>
+                            <button type="button" class="btn btn-success btn-square btn-outline-dashed waves-effect waves-light mb-2" id="user_details_add_promo_tariff_btn">
+                                <i class="mdi mdi-gift mr-2"></i>Отправить промо-тариф
+                            </button>
+                            <button type="button" class="btn btn-info btn-square btn-outline-dashed waves-effect waves-light mb-2" id="user_details_send_message_btn">
+                                <i class="mdi mdi-email mr-2"></i>Отправить сообщение
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h5 class="mb-3">Подписки пользователя</h5>
+                        <div id="user_subscriptions_container">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addBalanceModal" tabindex="-1" role="dialog" aria-labelledby="addBalanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addBalanceModalLabel">Пополнение баланса пользователя</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Пополнение баланса для пользователя: <span id="balance_username_display" class="font-weight-bold"></span></p>
+                <input type="hidden" id="balance_telegram_id">
+                
+                <div class="form-group">
+                    <label for="balance_amount">Сумма пополнения (₽)</label>
+                    <input type="number" class="form-control" id="balance_amount" min="1" placeholder="Введите сумму" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="balance_description">Описание (необязательно)</label>
+                    <textarea class="form-control" id="balance_description" rows="3" placeholder="Введите описание операции"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="confirmAddBalanceBtn">
+                    <i class="mdi mdi-cash-plus mr-2"></i>Пополнить баланс
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="sendPromoTariffModal" tabindex="-1" role="dialog" aria-labelledby="sendPromoTariffModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sendPromoTariffModalLabel">Отправка промо-тарифа пользователю</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Отправка промо-тарифа для пользователя: <span id="promo_username_display" class="font-weight-bold"></span></p>
+                <input type="hidden" id="promo_telegram_id">
+                
+                <div class="form-group">
+                    <label for="promo_tariff_select">Выберите промо-тариф</label>
+                    <select class="form-control" id="promo_tariff_select" required>
+                        <option value="" selected disabled>Загрузка промо-тарифов...</option>
+                    </select>
+                </div>
+                
+                <div class="alert alert-info" id="promo_tariff_info" style="display: none;">
+                    <p><strong>Описание тарифа:</strong> <span id="promo_tariff_description"></span></p>
+                    <p><strong>Срок действия:</strong> <span id="promo_tariff_duration"></span> дней</p>
+                    <p><strong>Сервер:</strong> <span id="promo_tariff_server"></span></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-square btn-outline-dashed waves-effect waves-light" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-success btn-square btn-outline-dashed waves-effect waves-light" id="confirmSendPromoTariffBtn">
+                    <i class="mdi mdi-send mr-2"></i>Отправить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="sendMessageModal" tabindex="-1" role="dialog" aria-labelledby="sendMessageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sendMessageModalLabel">Отправка сообщения пользователю</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Отправка сообщения для пользователя: <span id="message_username_display" class="font-weight-bold"></span></p>
+                <input type="hidden" id="message_telegram_id">
+                
+                <div class="form-group">
+                    <label for="message_text">Текст сообщения</label>
+                    <textarea class="form-control" id="message_text" rows="4" placeholder="Введите текст сообщения" required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-square btn-outline-dashed waves-effect waves-light" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-info btn-square btn-outline-dashed waves-effect waves-light" id="confirmSendMessageBtn">
+                    <i class="mdi mdi-send mr-2"></i>Отправить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        function showNotification(message, type) {
+            var icon = 'mdi-check-circle-outline';
+            var bgClass = 'bg-success';
+            
+            if (type === 'error') {
+                icon = 'mdi-alert-circle-outline';
+                bgClass = 'bg-danger';
+            }
+            
+            var notification = $('<div class="toast fade show" role="alert" aria-live="assertive" aria-atomic="true">' +
+                '<div class="toast-header ' + bgClass + ' text-white">' +
+                '<i class="mdi ' + icon + ' mr-2"></i>' +
+                '<strong class="mr-auto">Уведомление</strong>' +
+                '<button type="button" class="ml-2 mb-1 close text-white" data-dismiss="toast" aria-label="Close">' +
+                '<span aria-hidden="true">&times;</span>' +
+                '</button>' +
+                '</div>' +
+                '<div class="toast-body">' + message + '</div>' +
+                '</div>');
+            
+            if ($('#toast-container').length === 0) {
+                $('body').append('<div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>');
+            }
+            
+            $('#toast-container').append(notification);
+            
+            setTimeout(function() {
+                notification.toast('hide');
+                setTimeout(function() {
+                    notification.remove();
+                }, 500);
+            }, 3000);
+        }
+        
+        function loadServers() {
+            $.ajax({
+                url: "{{ url_for('get_servers') }}",
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        var servers = response.servers;
+                        var options = '<option value="">Выберите сервер</option>';
+                        servers.forEach(function(server) {
+                            options += `<option value="${server.id}">${server.name}</option>`;
+                        });
+                        $('#add_server_id').html(options);
+                    }
+                }
+            });
+        }
+
+        function loadTariffs() {
+            $.ajax({
+                url: "{{ url_for('get_tariffs') }}",
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        var tariffs = response.tariffs;
+                        var options = '<option value="">Выберите тариф</option>';
+                        tariffs.forEach(function(tariff) {
+                            options += `<option value="${tariff.id}">${tariff.name} (${tariff.price}₽)</option>`;
+                        });
+                        $('#add_tariff_id').html(options);
+                    }
+                }
+            });
+        }
+
+        $('#addUserModal').on('show.bs.modal', function() {
+            loadServers();
+            loadTariffs();
+        });
+
+        $('#saveUserBtn').on('click', function() {
+            var userData = {
+                email: $('#add_email').val(),
+                server_id: $('#add_server_id').val(),
+                tariff_id: $('#add_tariff_id').val(),
+                telegram_id: $('#add_telegram_id').val()
+            };
+
+            if (!userData.email || !userData.server_id || !userData.tariff_id || !userData.telegram_id) {
+                showNotification('Пожалуйста, заполните все поля', 'error');
+                return;
+            }
+
+            $.ajax({
+                url: "{{ url_for('create_user') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(userData),
+                success: function(response) {
+                    if (response.success) {
+                        $('#addUserModal').modal('hide');
+                        showNotification('Пользователь успешно создан');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showNotification('Ошибка: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showNotification('Произошла ошибка при создании пользователя', 'error');
+                    console.error(error);
+                }
+            });
+        });
+        
+        $('#searchUserBtn').on('click', function() {
+            var telegramId = $('#searchTelegramId').val().trim();
+            
+            if (!telegramId) {
+                showNotification('Пожалуйста, введите Telegram ID для поиска', 'error');
+                return;
+            }
+            
+            if (!/^\d+$/.test(telegramId)) {
+                showNotification('Telegram ID должен содержать только цифры', 'error');
+                return;
+            }
+            
+            $.ajax({
+                url: "{{ url_for('get_user_details') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ telegram_id: telegramId }),
+                success: function(response) {
+                    if (response.success) {
+                        var user = response.data;
+                        
+                        $('#user_details_username').text(user.username || 'Без имени');
+                        $('#user_details_telegram_id').text(user.telegram_id);
+                        $('#user_details_date').text(user.date);
+                        $('#user_details_trial_period').text(user.trial_period == 1 ? 'Использован' : 'Доступен');
+                        $('#user_details_referral_code').text(user.referral_code || 'Нет');
+                        $('#user_details_referral_count').text(user.referral_count || '0');
+                        $('#user_details_balance').text((user.balance || '0') + ' ₽');
+                        $('#user_details_payments').text((user.total_payments || '0') + ' ₽');
+                        
+                        var subscriptionsHtml = '';
+                        if (user.subscriptions && user.subscriptions.length > 0) {
+                            user.subscriptions.forEach(function(sub) {
+                                subscriptionsHtml += '<div class="subscription-item mb-3 p-3 border rounded">';
+                                subscriptionsHtml += '<h5 class="mb-2">Тариф: ' + (sub.tariff_name || 'Неизвестно') + '</h5>';
+                                subscriptionsHtml += '<p class="mb-1"><strong>Цена покупки:</strong> ' + (sub.tariff_price || '0') + ' ₽</p>';
+                                subscriptionsHtml += '<p class="mb-1"><strong>Сервер:</strong> ' + (sub.server_name || 'Неизвестно') + '</p>';
+                                subscriptionsHtml += '<p class="mb-1"><strong>Протокол:</strong> ' + (sub.server_protocol || 'Неизвестно') + '</p>';
+                                subscriptionsHtml += '<p class="mb-1"><strong>Дата начала:</strong> ' + (sub.start_date || '-') + '</p>';
+                                subscriptionsHtml += '<p class="mb-1"><strong>Дата окончания:</strong> ' + (sub.end_date || '-') + '</p>';
+                                
+                                subscriptionsHtml += '<div class="form-group">';
+                                subscriptionsHtml += '<label><strong>Ключ:</strong></label>';
+                                subscriptionsHtml += '<div class="input-group">';
+                                subscriptionsHtml += '<input type="text" class="form-control vless-key" readonly value="' + (sub.vless || '') + '">';
+                                subscriptionsHtml += '<div class="input-group-append">';
+                                subscriptionsHtml += '<button class="btn btn-primary btn-square btn-outline-dashed waves-effect waves-light copy-vless-btn" type="button"><i class="mdi mdi-content-copy"></i></button>';
+                                subscriptionsHtml += '</div></div></div>';
+                                
+                                if (sub.is_active == 1) {
+                                    subscriptionsHtml += '<span class="badge badge-success">Активна</span>';
+                                } else {
+                                    subscriptionsHtml += '<span class="badge badge-danger">Неактивна</span>';
+                                }
+                                
+                                subscriptionsHtml += '</div>';
+                            });
+                        } else {
+                            subscriptionsHtml = '<div class="alert alert-info">У пользователя нет активных подписок</div>';
+                        }
+                        
+                        $('#user_subscriptions_container').html(subscriptionsHtml);
+                        
+                        $('.copy-vless-btn').on('click', function() {
+                            var vlessInput = $(this).closest('.input-group').find('.vless-key');
+                            vlessInput.select();
+                            document.execCommand('copy');
+                            showNotification('Ключ скопирован в буфер обмена');
+                        });
+                        
+                        $('#searchTelegramId').val('');
+                        
+                        $('#userDetailsModal').modal('show');
+                    } else {
+                        showNotification('Ошибка: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showNotification('Произошла ошибка при поиске пользователя. Пожалуйста, попробуйте снова.', 'error');
+                    console.error(error);
+                }
+            });
+        });
+
+        $('#searchTelegramId').on('keypress', function(e) {
+            if (e.which === 13) {
+                $('#searchUserBtn').click();
+                e.preventDefault();
+            }
+        });
+        
+        $(document).on('click', '.user-details-link', function() {
+            var telegramId = $(this).data('telegram-id');
+            
+            $.ajax({
+                url: "{{ url_for('get_user_details') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ telegram_id: telegramId }),
+                success: function(response) {
+                    if (response.success) {
+                        var user = response.data;
+                        
+                        $('#user_details_username').text(user.username || 'Без имени');
+                        $('#user_details_telegram_id').text(user.telegram_id);
+                        $('#user_details_date').text(user.date);
+                        $('#user_details_trial_period').text(user.trial_period == 1 ? 'Использован' : 'Доступен');
+                        $('#user_details_referral_code').text(user.referral_code || 'Нет');
+                        $('#user_details_referral_count').text(user.referral_count || '0');
+                        $('#user_details_balance').text((user.balance || '0') + ' ₽');
+                        $('#user_details_payments').text((user.total_payments || '0') + ' ₽');
+                        
+                        var subscriptionsHtml = '';
+                        if (user.subscriptions && user.subscriptions.length > 0) {
+                            user.subscriptions.forEach(function(sub) {
+                                subscriptionsHtml += '<div class="subscription-item mb-3 p-3 border rounded">';
+                                subscriptionsHtml += '<h5 class="mb-2">Тариф: ' + (sub.tariff_name || 'Неизвестно') + '</h5>';
+                                subscriptionsHtml += '<p class="mb-1"><strong>Цена покупки:</strong> ' + (sub.tariff_price || '0') + ' ₽</p>';
+                                subscriptionsHtml += '<p class="mb-1"><strong>Сервер:</strong> ' + (sub.server_name || 'Неизвестно') + '</p>';
+                                subscriptionsHtml += '<p class="mb-1"><strong>Протокол:</strong> ' + (sub.server_protocol || 'Неизвестно') + '</p>';
+                                subscriptionsHtml += '<p class="mb-1"><strong>Дата начала:</strong> ' + (sub.start_date || '-') + '</p>';
+                                subscriptionsHtml += '<p class="mb-1"><strong>Дата окончания:</strong> ' + (sub.end_date || '-') + '</p>';
+                                
+                                subscriptionsHtml += '<div class="form-group">';
+                                subscriptionsHtml += '<label><strong>Ключ:</strong></label>';
+                                subscriptionsHtml += '<div class="input-group">';
+                                subscriptionsHtml += '<input type="text" class="form-control vless-key" readonly value="' + (sub.vless || '') + '">';
+                                subscriptionsHtml += '<div class="input-group-append">';
+                                subscriptionsHtml += '<button class="btn btn-primary btn-square btn-outline-dashed waves-effect waves-light copy-vless-btn" type="button"><i class="mdi mdi-content-copy"></i></button>';
+                                subscriptionsHtml += '</div></div></div>';
+                                
+                                if (sub.is_active == 1) {
+                                    subscriptionsHtml += '<span class="badge badge-success">Активна</span>';
+                                } else {
+                                    subscriptionsHtml += '<span class="badge badge-danger">Неактивна</span>';
+                                }
+                                
+                                subscriptionsHtml += '</div>';
+                            });
+                        } else {
+                            subscriptionsHtml = '<div class="alert alert-info">У пользователя нет активных подписок</div>';
+                        }
+                        
+                        $('#user_subscriptions_container').html(subscriptionsHtml);
+                        
+                        $('.copy-vless-btn').on('click', function() {
+                            var vlessInput = $(this).closest('.input-group').find('.vless-key');
+                            vlessInput.select();
+                            document.execCommand('copy');
+                            showNotification('Ключ скопирован в буфер обмена');
+                        });
+                        
+                        $('#userDetailsModal').modal('show');
+                    } else {
+                        showNotification('Ошибка: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showNotification('Произошла ошибка при получении информации о пользователе. Пожалуйста, попробуйте снова.', 'error');
+                    console.error(error);
+                }
+            });
+        });
+        
+        $('#addUserBtn').on('click', function() {
+            $('#add_email').val('');
+            $('#add_server_id').val('');
+            $('#add_tariff_id').val('');
+            $('#add_telegram_id').val('');
+            
+            $('#addUserModal').modal('show');
+        });
+        
+        $(document).on('click', '.ban-user', function() {
+            var telegramId = $(this).data('telegram-id');
+            var username = $(this).data('username') || 'ID: ' + telegramId;
+            
+            $('#ban_telegram_id').val(telegramId);
+            $('#ban_username_display').text(username);
+            
+            $('#banUserModal').modal('show');
+        });
+        
+        $('#confirmBanUserBtn').on('click', function() {
+            var telegramId = $('#ban_telegram_id').val();
+            
+            $.ajax({
+                url: "{{ url_for('ban_user') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ telegram_id: telegramId }),
+                success: function(response) {
+                    if (response.success) {
+                        $('#banUserModal').modal('hide');
+                        
+                        showNotification('Пользователь успешно заблокирован');
+                        
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showNotification('Ошибка: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showNotification('Произошла ошибка при блокировке пользователя. Пожалуйста, попробуйте снова.', 'error');
+                    console.error(error);
+                }
+            });
+        });
+        
+        $(document).on('click', '.unban-user', function() {
+            var telegramId = $(this).data('telegram-id');
+            var username = $(this).data('username') || 'ID: ' + telegramId;
+            
+            $('#unban_telegram_id').val(telegramId);
+            $('#unban_username_display').text(username);
+            
+            $('#unbanUserModal').modal('show');
+        });
+        
+        $('#confirmUnbanUserBtn').on('click', function() {
+            var telegramId = $('#unban_telegram_id').val();
+            
+            $.ajax({
+                url: "{{ url_for('unban_user') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ telegram_id: telegramId }),
+                success: function(response) {
+                    if (response.success) {
+                        $('#unbanUserModal').modal('hide');
+                        
+                        showNotification('Пользователь успешно разблокирован');
+                        
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showNotification('Ошибка: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showNotification('Произошла ошибка при разблокировке пользователя. Пожалуйста, попробуйте снова.', 'error');
+                    console.error(error);
+                }
+            });
+        });
+
+        $('#user_details_add_balance_btn').on('click', function() {
+            var telegramId = $('#user_details_telegram_id').text();
+            var username = $('#user_details_username').text();
+            
+            $('#balance_telegram_id').val(telegramId);
+            $('#balance_username_display').text(username);
+            $('#balance_amount').val('');
+            $('#balance_description').val('');
+            
+            $('#userDetailsModal').modal('hide');
+            $('#addBalanceModal').modal('show');
+        });
+
+        $('#confirmAddBalanceBtn').on('click', function() {
+            var telegramId = $('#balance_telegram_id').val();
+            var amount = $('#balance_amount').val();
+            var description = $('#balance_description').val() || 'Пополнение баланса администратором';
+            
+            if (!amount || amount <= 0) {
+                showNotification('Пожалуйста, введите корректную сумму пополнения', 'error');
+                return;
+            }
+            
+            
+            $.ajax({
+                url: "{{ url_for('add_balance') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    telegram_id: telegramId,
+                    amount: parseFloat(amount),
+                    description: description
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        $('#addBalanceModal').modal('hide');
+                        
+                        showNotification('Баланс пользователя успешно пополнен на ' + amount + ' ₽');
+                        
+                       
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showNotification('Ошибка: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showNotification('Произошла ошибка при пополнении баланса. Пожалуйста, попробуйте снова.', 'error');
+                    console.error(error);
+                }
+            });
+        });
+
+        $('#user_details_add_promo_tariff_btn').on('click', function() {
+            var telegramId = $('#user_details_telegram_id').text();
+            var username = $('#user_details_username').text();
+            
+            $('#promo_telegram_id').val(telegramId);
+            $('#promo_username_display').text(username);
+            
+            $.ajax({
+                url: "{{ url_for('get_promo_tariffs') }}",
+                type: 'GET',
+                contentType: 'application/json',
+                success: function(response) {
+                    if (response.success) {
+                        var promoTariffs = response.data;
+                        var selectOptions = '<option value="" disabled selected>Выберите промо-тариф</option>';
+                        
+                        promoTariffs.forEach(function(tariff) {
+                            selectOptions += '<option value="' + tariff.id + '" ' +
+                                             'data-description="' + tariff.description + '" ' +
+                                             'data-duration="' + tariff.left_day + '" ' +
+                                             'data-server-id="' + tariff.server_id + '" ' +
+                                             'data-server-name="' + tariff.server_name + '">' + 
+                                             tariff.name + '</option>';
+                        });
+                        
+                        $('#promo_tariff_select').html(selectOptions);
+                        
+                        $('#userDetailsModal').modal('hide');
+                        $('#sendPromoTariffModal').modal('show');
+                    } else {
+                        showNotification('Ошибка загрузки промо-тарифов: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showNotification('Произошла ошибка при загрузке промо-тарифов. Пожалуйста, попробуйте снова.', 'error');
+                    console.error(error);
+                }
+            });
+        });
+
+       
+        $('#promo_tariff_select').on('change', function() {
+            var selectedOption = $(this).find('option:selected');
+            
+            if (selectedOption.val()) {
+                
+                $('#promo_tariff_description').text(selectedOption.data('description') || 'Нет описания');
+                
+                var duration = selectedOption.data('duration');
+                $('#promo_tariff_duration').text(duration !== undefined ? duration : '0');
+                $('#promo_tariff_server').text(selectedOption.data('server-name') || 'Неизвестно');
+                
+                $('#promo_tariff_info').show();
+            } else {
+                $('#promo_tariff_info').hide();
+            }
+        });
+
+       
+        $('#confirmSendPromoTariffBtn').on('click', function() {
+            var telegramId = $('#promo_telegram_id').val();
+            var tariffId = $('#promo_tariff_select').val();
+            
+            if (!tariffId) {
+                showNotification('Пожалуйста, выберите промо-тариф', 'error');
+                return;
+            }
+            
+            $.ajax({
+                url: "{{ url_for('user_send_promo_tariff') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    telegram_id: parseInt(telegramId, 10),
+                    tariff_id: parseInt(tariffId, 10)
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        $('#sendPromoTariffModal').modal('hide');
+                        
+                        showNotification('Промо-тариф успешно отправлен пользователю');
+                        
+                       
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showNotification('Ошибка: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showNotification('Произошла ошибка при отправке промо-тарифа. Пожалуйста, попробуйте снова.', 'error');
+                    console.error(error);
+                }
+            });
+        });
+
+       
+        $('#user_details_send_message_btn').on('click', function() {
+            var telegramId = $('#user_details_telegram_id').text();
+            var username = $('#user_details_username').text();
+            
+            $('#message_telegram_id').val(telegramId);
+            $('#message_username_display').text(username);
+            $('#message_text').val('');
+            
+            $('#userDetailsModal').modal('hide');
+            $('#sendMessageModal').modal('show');
+        });
+
+       
+        $('#confirmSendMessageBtn').on('click', function() {
+            var telegramId = $('#message_telegram_id').val();
+            var message = $('#message_text').val();
+            
+            
+            if (!message) {
+                showNotification('Пожалуйста, введите текст сообщения', 'error');
+                return;
+            }
+            
+            $.ajax({
+                url: "{{ url_for('send_user_message') }}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    telegram_id: parseInt(telegramId, 10),
+                    message: message
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        $('#sendMessageModal').modal('hide');
+                        
+                        showNotification('Сообщение успешно отправлено пользователю');
+                        
+                       
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showNotification('Ошибка: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showNotification('Произошла ошибка при отправке сообщения. Пожалуйста, попробуйте снова.', 'error');
+                    console.error(error);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 
