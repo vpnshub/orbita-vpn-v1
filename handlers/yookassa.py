@@ -53,7 +53,7 @@ class YooKassaManager:
                 },
                 "confirmation": {
                     "type": "redirect",
-                    "return_url": "https://t.me/BURYAT_VPN_BOT"
+                    "return_url": "https://t.me/orbitavpn_bot"
                 },
                 "capture": True,
                 "description": description,
