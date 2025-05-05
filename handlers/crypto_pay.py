@@ -8,7 +8,7 @@ from handlers.database import db
 class CryptoPayAPI:
     def __init__(self, api_token: str):
         self.api_token = api_token
-        self.base_url = "https://testnet-pay.crypt.bot/api"
+        self.base_url = "https://pay.crypt.bot/api"
         
     async def _make_request(self, method: str, endpoint: str, **kwargs) -> Dict:
         """Выполнение запроса к API"""
