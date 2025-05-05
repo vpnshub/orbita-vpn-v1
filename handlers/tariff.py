@@ -500,12 +500,17 @@ async def show_tariffs(callback: CallbackQuery):
 
         keyboard = InlineKeyboardBuilder()
         for server in servers:
-            keyboard.button(
-                text=f"{server['name']}", 
-                callback_data=f"user_select_server:{server['id']}"
+            keyboard.add(
+                InlineKeyboardButton(
+                    text=f"{server['name']}",
+                    callback_data=f"user_select_server:{server['id']}"
+                )
             )
-        keyboard.button(text="🔙 Назад", callback_data="tariff_back_to_start")
-        keyboard.adjust(2, 1)
+
+        keyboard.add(
+            InlineKeyboardButton(text="🔙 Назад", callback_data="tariff_back_to_start")
+        )
+        keyboard.adjust(1)
 
         tariff_message = await db.get_bot_message("tariff")
         text = tariff_message['text'] if tariff_message else "🚀 Независимо от ваших потребностей, мы предлагаем гибкие тарифные планы для любого типа сервера"
@@ -560,13 +565,16 @@ async def show_server_tariffs(callback: CallbackQuery):
 
         keyboard = InlineKeyboardBuilder()
         for tariff in tariffs:
-            keyboard.button(
-                text=f"{tariff['name']} - {tariff['price']}₽", 
+            keyboard.add(
+                InlineKeyboardButton(
+                text=f"{tariff['name']} - {tariff['price']}₽",
                 callback_data=f"select_tariff:{tariff['id']}"
+                )
             )
-        keyboard.button(text="🔙 К серверам", callback_data="show_tariffs")
-        keyboard.button(text="🔙 В меню", callback_data="tariff_back_to_start")
-        keyboard.adjust(2)
+
+        keyboard.add(InlineKeyboardButton(text="🔙 К серверам", callback_data="show_tariffs"))
+        keyboard.add(InlineKeyboardButton(text="🔙 В меню", callback_data="tariff_back_to_start"))
+        keyboard.adjust(1)
 
         await callback.message.edit_text(
             text=text,
