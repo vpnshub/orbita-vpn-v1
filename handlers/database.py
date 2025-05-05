@@ -420,8 +420,8 @@ class Database:
                         await bot.send_message(
                             chat_id=notify_settings[0],
                             text=message_text,
-                            parse_mode="HTML",
-                            reply_markup=get_admin_keyboard()
+                            parse_mode="HTML"
+                            #reply_markup=get_admin_keyboard()
                         )
                     except Exception as e:
                         logger.error(f"Ошибка при отправке уведомления о регистрации: {e}")
