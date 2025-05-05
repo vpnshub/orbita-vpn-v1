@@ -31,8 +31,15 @@ async def show_tariffs(callback: CallbackQuery):
             await callback.message.answer("В данный момент нет доступных тарифов.")
             return
 
-        tariffs_text = "Ознакомьтесь с тарифными планами нашего сервиса:\n\n"
+        tariffs_text = "Выберите страну:\n\n"
+        seen = set()
         for tariff in tariffs:
+            key = tariff["id"]
+            if key not in seen:
+                seen.add(key)
+                tariffs_text += f"{tariff['name']}: {tariff['description']}\n"
+
+        """for tariff in tariffs:
             tariffs_text += (
                 f"<blockquote>"
                 f"<b>Тарифный план:</b> {tariff['name']}\n"
@@ -41,7 +48,7 @@ async def show_tariffs(callback: CallbackQuery):
                 f"<b>Страна:</b> {tariff['server_name']}\n"
                 f"<b>Срок действия:</b> {tariff['left_day']} дней\n"
                 f"</blockquote>\n"
-            )
+            )"""
 
         keyboard = InlineKeyboardBuilder()
         async with aiosqlite.connect(db.db_path) as conn:
@@ -60,7 +67,8 @@ async def show_tariffs(callback: CallbackQuery):
                 callback_data=f"user_select_server:{server['id']}"
             )
         keyboard.button(text="🔙 Назад", callback_data="tariff_back_to_start")
-        keyboard.adjust(2, 1)
+        #keyboard.adjust(2, 1)
+        keyboard.adjust(1)
 
         message_data = await db.get_bot_message('tariff_message')
         
