@@ -549,6 +549,9 @@ async def show_server_tariffs(callback: CallbackQuery):
             return
 
         server_name = tariffs[0]['server_name']
+        text = f"🌍 Сервер: {server_name}\n"
+
+        """
         text = f"🌍 Сервер: {server_name}\n\nДоступные тарифные планы:\n\n"
         
         for tariff in tariffs:
@@ -559,7 +562,7 @@ async def show_server_tariffs(callback: CallbackQuery):
                 f"<b>Стоимость:</b> {tariff['price']} руб.\n"
                 f"<b>Срок действия:</b> {tariff['left_day']} дней\n"
                 f"</blockquote>\n"
-            )
+            )"""
         
         text += "\nВыберите подходящий тарифный план:"
 
