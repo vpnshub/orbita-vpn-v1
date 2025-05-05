@@ -39,17 +39,6 @@ async def show_tariffs(callback: CallbackQuery):
                 seen.append(key)
                 tariffs_text += f"{tariff['server_name']}: {tariff['description']}\n"
 
-        """for tariff in tariffs:
-            tariffs_text += (
-                f"<blockquote>"
-                f"<b>Тарифный план:</b> {tariff['name']}\n"
-                f"<b>Описание:</b> {tariff['description']}\n"
-                f"<b>Стоимость:</b> {tariff['price']} руб.\n"
-                f"<b>Страна:</b> {tariff['server_name']}\n"
-                f"<b>Срок действия:</b> {tariff['left_day']} дней\n"
-                f"</blockquote>\n"
-            )"""
-
         keyboard = InlineKeyboardBuilder()
         async with aiosqlite.connect(db.db_path) as conn:
             conn.row_factory = aiosqlite.Row
@@ -71,8 +60,6 @@ async def show_tariffs(callback: CallbackQuery):
         keyboard.add(
             InlineKeyboardButton(text="🔙 Назад", callback_data="tariff_back_to_start")
         )
-        #keyboard.button(text="🔙 Назад", callback_data="tariff_back_to_start")
-        #keyboard.adjust(2, 1)
         keyboard.adjust(1)
 
         message_data = await db.get_bot_message('tariff_message')
