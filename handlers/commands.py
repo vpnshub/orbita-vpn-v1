@@ -115,10 +115,10 @@ async def start_command(message: Message):
                 reply_markup=inline_keyboard,
                 parse_mode="HTML"
             )
-        await message.answer(
-            "Главное меню ⤴️",
-            reply_markup=main_menu_keyboard
-        )
+        #await message.answer(
+        #    "Главное меню ⤴️",
+        #    reply_markup=main_menu_keyboard
+        #)
         logger.info(f"Отправлено стартовое сообщение пользователю: {message.from_user.id}")
             
     except Exception as e:
