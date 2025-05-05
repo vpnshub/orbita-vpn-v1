@@ -32,12 +32,12 @@ async def show_tariffs(callback: CallbackQuery):
             return
 
         tariffs_text = "Выберите страну:\n\n"
-        seen = set()
+        seen = []
         for tariff in tariffs:
-            key = tariff["id"]
+            key = tariff["server_name"]
             if key not in seen:
-                seen.add(key)
-                tariffs_text += f"{tariff['name']}: {tariff['description']}\n"
+                seen.append(key)
+                tariffs_text += f"{tariff['server_name']}: {tariff['description']}\n"
 
         """for tariff in tariffs:
             tariffs_text += (
