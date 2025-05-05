@@ -1,5 +1,5 @@
 from aiogram import Router, F, types
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from asyncio import Lock
 from handlers.database import db
@@ -62,11 +62,16 @@ async def show_tariffs(callback: CallbackQuery):
                 servers = await cursor.fetchall()
 
         for server in servers:
-            keyboard.button(
-                text=f"{server['name']}", 
-                callback_data=f"user_select_server:{server['id']}"
+            keyboard.add(
+                InlineKeyboardButton(
+                    text=f"{server['name']}",
+                    callback_data=f"user_select_server:{server['id']}"
+                )
             )
-        keyboard.button(text="🔙 Назад", callback_data="tariff_back_to_start")
+        keyboard.add(
+            InlineKeyboardButton(text="🔙 Назад", callback_data="tariff_back_to_start")
+        )
+        #keyboard.button(text="🔙 Назад", callback_data="tariff_back_to_start")
         #keyboard.adjust(2, 1)
         keyboard.adjust(1)
 
