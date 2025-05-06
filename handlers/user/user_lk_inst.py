@@ -8,8 +8,6 @@ from handlers.user.user_kb import get_user_instructions_keyboard, get_back_keybo
 
 router = Router()
 
-@router.callback_query(F.data == "lk_instructions")
-
 @router.message(Command("guides"))
 async def show_instructions_menu_command(message: Message):
     """Отображение меню инструкций"""
