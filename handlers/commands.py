@@ -1,6 +1,6 @@
 from aiogram import Router, F
 from aiogram.filters import Command
-from aiogram.types import Message, FSInputFile, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+from aiogram.types import Message, FSInputFile, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, CallbackQuery
 from loguru import logger
 import os
 import aiosqlite
@@ -20,6 +20,16 @@ main_menu_keyboard = ReplyKeyboardMarkup(
 async def main_menu_button(message: Message):
     """Обработчик кнопки Главное меню"""
     await start_command(message)
+
+@router.callback_query(F.data == "start_main_menu")
+async def process_lk_button(callback: CallbackQuery):
+    """Обработчик кнопки Личный кабинет"""
+    try:
+        await callback.message.delete()
+        await start_command(callback.message)
+    except Exception as e:
+        logger.error(f"Ошибка при переходе в личный кабинет: {e}")
+        await callback.answer("Произошла ошибка при открытии личного кабинета")
 
 @router.message(Command("start"))
 async def start_command(message: Message):

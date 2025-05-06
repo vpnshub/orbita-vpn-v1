@@ -115,10 +115,10 @@ def get_subscriptions_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
 
     buttons = [
-        InlineKeyboardButton(text="👤 Вернуться в кабинет", callback_data="start_lk"),
         InlineKeyboardButton(text="🤝 Объединить подписки", callback_data="merge_subscriptions"),
         InlineKeyboardButton(text="💳 Тарифы", callback_data="start_tariffs"),
         InlineKeyboardButton(text="💬 Помощь", callback_data="start_help"),
+        InlineKeyboardButton(text="👤 Личный Кабинет", callback_data="start_lk"),
     ]
 
     for i in range(0, len(buttons), 2):
@@ -133,7 +133,7 @@ def get_continue_merge_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     
     buttons = [
-        InlineKeyboardButton(text="👤 Вернуться в кабинет", callback_data="start_lk"),
+        InlineKeyboardButton(text="👤 Личный Кабинет", callback_data="start_lk"),
         InlineKeyboardButton(text="✅ Продолжить", callback_data="continue_merge"),
     ]
     
@@ -145,7 +145,7 @@ def get_back_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     
     buttons = [
-        InlineKeyboardButton(text="👤 Вернуться в кабинет", callback_data="start_lk"),
+        InlineKeyboardButton(text="👤 Личный Кабинет", callback_data="start_lk"),
     ]
     
     builder.row(*buttons[:2])
@@ -171,7 +171,7 @@ def get_help_keyboard() -> InlineKeyboardMarkup:
     buttons = [
         InlineKeyboardButton(text="🤝 Объединить подписки", callback_data="merge_subscriptions"),
         InlineKeyboardButton(text="📞 Техподдержка", callback_data="help_support"),
-        InlineKeyboardButton(text="👤 Вернуться в кабинет", callback_data="start_lk"),
+        InlineKeyboardButton(text="👤 Личный Кабинет", callback_data="start_lk"),
     ]
     
     builder.row(*buttons[:2])
@@ -183,9 +183,9 @@ def get_no_subscriptions_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     
     buttons = [
-        InlineKeyboardButton(text="👤 В личный кабинет", callback_data="start_lk"),
         InlineKeyboardButton(text="💳 Тарифы", callback_data="start_tariffs"),
         InlineKeyboardButton(text="📞 Техподдержка", callback_data="help_support"),
+        InlineKeyboardButton(text="👤 Личный кабинет", callback_data="start_lk"),
     ]
     
     builder.row(*buttons[:2])
@@ -305,7 +305,7 @@ def get_user_success_transfer_keyboard() -> InlineKeyboardMarkup:
     buttons = [
         InlineKeyboardButton(text="💲 Посмотреть баланс", callback_data="lk_my_balance"),
         InlineKeyboardButton(text="💳 Купить тариф", callback_data="start_tariffs"),
-        InlineKeyboardButton(text="👤 В личный кабинет", callback_data="start_lk"),
+        InlineKeyboardButton(text="👤 Личный кабинет", callback_data="start_lk"),
     ]
     
     builder.row(buttons[0])
