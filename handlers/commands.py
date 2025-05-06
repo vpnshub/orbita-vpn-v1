@@ -69,11 +69,12 @@ async def start_command(message: Message):
             bot=message.bot
         )
 
-        show_trial = True
+        show_trial = False
         try:
             user = await db.get_user(message.from_user.id)
             if user.get('trial_period'):
                 show_trial = False
+            logger.info(f'Start Command user: {user.get('username')}')
         except Exception as e:
             logger.error(f"Ошибка при попытке получить show_trial: {e}")
 
