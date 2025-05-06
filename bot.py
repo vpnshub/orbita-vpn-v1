@@ -2,6 +2,7 @@ import os
 import asyncio
 import aiosqlite
 from aiogram import Bot, Dispatcher
+from aiogram.types import BotCommand
 from loguru import logger
 from handlers.database import db
 from handlers.admin.admin import router as admin_router
@@ -82,6 +83,13 @@ async def bot_start():
         logger.error(f"Ошибка при инициализации Crypto Pay API: {e}")
 
     bot = Bot(token=settings['bot_token'])
+
+    await bot.set_my_commands(
+        (
+            BotCommand(command="/start", description="Главное меню"),
+        ),
+    )
+
     dp = Dispatcher()
     
     dp.include_router(user_balance_router)  
