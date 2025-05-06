@@ -527,7 +527,7 @@ async def show_tariffs(callback: CallbackQuery):
             user = await db.get_user(callback.from_user.id)
             if user.get('trial_period'):
                 show_trial = False
-            if user.get('username').endwith('_bot'):
+            if user.get('username').endswith('_bot'):
                 show_trial = False
         except Exception as e:
             logger.error(f"Ошибка при попытке получить show_trial: {e}")
@@ -601,7 +601,7 @@ async def show_server_tariffs(callback: CallbackQuery):
             user = await db.get_user(callback.from_user.id)
             if user.get('trial_period'):
                 show_trial = False
-            if user.get('username').endwith('_bot'):
+            if user.get('username').endswith('_bot'):
                 show_trial = False
         except Exception as e:
             logger.error(f"Ошибка при попытке получить show_trial: {e}")
