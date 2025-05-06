@@ -128,14 +128,21 @@ async def process_tariff_selection(callback: CallbackQuery):
         
         
         if is_yookassa_active:
-            keyboard.button(text="🔵 ЮКасса", callback_data=f"create_invoice:{tariff_id}")
+            keyboard.row(InlineKeyboardButton(text="🔵 ЮКасса", callback_data=f"create_invoice:{tariff_id}"))
         if is_crypto_active:
-            keyboard.button(text="🪙 CryptoBot", callback_data=f"apply_crypto_payments:{tariff_id}")
-        keyboard.button(text="💲 Оплатить с баланса", callback_data=f"apply_balance:{tariff_id}")
-        keyboard.button(text="🎫 Применить промокод", callback_data=f"apply_promo_code:{tariff_id}")
-        keyboard.button(text="💵 Оплатить кодом-оплаты", callback_data=f"apply_payments_code:{tariff_id}")
-        keyboard.button(text="🔙 Отмена", callback_data="tariff_back_to_start")
-        keyboard.adjust(2, 1)  
+            keyboard.row(InlineKeyboardButton(text="🪙 CryptoBot", callback_data=f"apply_crypto_payments:{tariff_id}"))
+        keyboard.row(
+            InlineKeyboardButton(text="💲 Оплатить с баланса", callback_data=f"apply_balance:{tariff_id}")
+        )
+
+        keyboard.row(
+            InlineKeyboardButton(text="🎫 Промокод", callback_data=f"apply_promo_code:{tariff_id}"),
+            InlineKeyboardButton(text="💵 Код-оплаты", callback_data=f"apply_payments_code:{tariff_id}")
+        )
+        keyboard.row(
+            InlineKeyboardButton(text="🔙 Отмена", callback_data="tariff_back_to_start")
+        )
+        #keyboard.adjust(2, 1)
         
         await callback.message.answer(
             text=message_text,
