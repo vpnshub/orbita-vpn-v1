@@ -7,18 +7,15 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-async def get_start_keyboard() -> InlineKeyboardMarkup:
+async def get_start_keyboard(show_trial=True) -> InlineKeyboardMarkup:
     """Создание стартовой клавиатуры"""
     builder = InlineKeyboardBuilder()
 
-    builder.row(
-        InlineKeyboardButton(text="🎁 Пробный период", callback_data="start_trial")
-    )
+    if show_trial:
+        builder.row(InlineKeyboardButton(text="🎁 Пробный период", callback_data="start_trial"))
 
     builder.row(InlineKeyboardButton(text="👤 Личный кабинет", callback_data="start_lk"))
-
     builder.row(InlineKeyboardButton(text="💳 Купить подписку", callback_data="start_tariffs"))
-
     builder.row(InlineKeyboardButton(text="📞 Техподдержка", callback_data="help_support"))
     
     base_buttons = []
