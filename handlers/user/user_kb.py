@@ -15,13 +15,13 @@ async def get_start_keyboard() -> InlineKeyboardMarkup:
         InlineKeyboardButton(text="🎁 Пробный период", callback_data="start_trial")
     )
 
-    builder.row(
-        InlineKeyboardButton(text="👤 Личный кабинет", callback_data="start_lk"),
-        InlineKeyboardButton(text="💳 Купить подписку", callback_data="start_tariffs"),
-        InlineKeyboardButton(text="📞 Техподдержка", callback_data="help_support"),
-    )
+    builder.row(InlineKeyboardButton(text="👤 Личный кабинет", callback_data="start_lk"))
+
+    builder.row(InlineKeyboardButton(text="💳 Купить подписку", callback_data="start_tariffs"))
+
+    builder.row(InlineKeyboardButton(text="📞 Техподдержка", callback_data="help_support"))
     
-    #base_buttons = []
+    base_buttons = []
     
     try:
         async with aiosqlite.connect(db.db_path) as conn:
@@ -44,10 +44,11 @@ async def get_start_keyboard() -> InlineKeyboardMarkup:
                 )
     except Exception as e:
         logger.error(f"Ошибка при проверке активного розыгрыша: {e}")
-    
-    """for i in range(0, len(base_buttons), 2):
-        row_buttons = base_buttons[i:i+2]
-        builder.row(*row_buttons)"""
+
+    if base_buttons:
+        for i in range(0, len(base_buttons), 2):
+            row_buttons = base_buttons[i:i+2]
+            builder.row(*row_buttons)
     
     builder.row(
         InlineKeyboardButton(text="🔗 Заработок", callback_data="referral_program"),
