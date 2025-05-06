@@ -7,7 +7,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-async def get_start_keyboard(show_trial=True) -> InlineKeyboardMarkup:
+async def get_start_keyboard(show_trial=False) -> InlineKeyboardMarkup:
     """Создание стартовой клавиатуры"""
     builder = InlineKeyboardBuilder()
 
