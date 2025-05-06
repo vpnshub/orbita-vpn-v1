@@ -47,9 +47,9 @@ async def get_start_keyboard(show_trial=False) -> InlineKeyboardMarkup:
             row_buttons = base_buttons[i:i+2]
             builder.row(*row_buttons)
     
-    builder.row(
+    """builder.row(
         InlineKeyboardButton(text="🔗 Заработок", callback_data="referral_program")
-    )
+    )"""
 
     """builder.row(
         InlineKeyboardButton(text="🔗 Заработок", callback_data="referral_program"),
