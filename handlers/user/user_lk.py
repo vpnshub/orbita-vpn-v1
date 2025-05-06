@@ -81,7 +81,15 @@ async def process_back_to_start(callback: CallbackQuery):
         else:
             text = start_message['text']
 
-        inline_keyboard = await get_start_keyboard()
+        show_trial = True
+        try:
+            user = await db.get_user(callback.from_user.id)
+            if user.get('trial_period'):
+                show_trial = False
+        except Exception as e:
+            logger.error(f"Ошибка при попытке получить show_trial: {e}")
+
+        inline_keyboard = await get_start_keyboard(show_trial=show_trial)
 
         if start_message and start_message['image_path'] and os.path.exists(start_message['image_path']):
             photo = FSInputFile(start_message['image_path'])

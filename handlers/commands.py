@@ -62,8 +62,6 @@ async def start_command(message: Message):
             text = "Добро пожаловать!"
         else:
             text = start_message['text']
-
-        inline_keyboard = await get_start_keyboard()
             
         await db.register_user(
             telegram_id=message.from_user.id,

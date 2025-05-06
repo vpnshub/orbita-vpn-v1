@@ -522,9 +522,16 @@ async def show_tariffs(callback: CallbackQuery):
 
     except Exception as e:
         logger.error(f"Ошибка при отображении серверов: {e}")
+        show_trial = True
+        try:
+            user = await db.get_user(callback.from_user.id)
+            if user.get('trial_period'):
+                show_trial = False
+        except Exception as e:
+            logger.error(f"Ошибка при попытке получить show_trial: {e}")
         await callback.message.edit_text(
             "Произошла ошибка при загрузке списка серверов",
-            reply_markup= await get_start_keyboard()
+            reply_markup= await get_start_keyboard(show_trial=show_trial)
         )
 
 @router.callback_query(F.data.startswith("user_select_server:"))
@@ -587,7 +594,14 @@ async def show_server_tariffs(callback: CallbackQuery):
 
     except Exception as e:
         logger.error(f"Ошибка при отображении тарифов сервера: {e}")
+        show_trial = True
+        try:
+            user = await db.get_user(callback.from_user.id)
+            if user.get('trial_period'):
+                show_trial = False
+        except Exception as e:
+            logger.error(f"Ошибка при попытке получить show_trial: {e}")
         await callback.message.edit_text(
             "Произошла ошибка при загрузке тарифов",
-            reply_markup= await get_start_keyboard()
+            reply_markup= await get_start_keyboard(show_trial)
         )

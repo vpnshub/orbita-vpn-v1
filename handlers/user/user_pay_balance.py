@@ -17,6 +17,14 @@ async def process_balance_payment(callback: CallbackQuery):
         db = Database()
         
         logger.info(f"Начало оплаты с баланса для пользователя {callback.from_user.id}, тариф {tariff_id}")
+
+        show_trial = True
+        try:
+            user = await db.get_user(callback.from_user.id)
+            if user.get('trial_period'):
+                show_trial = False
+        except Exception as e:
+            logger.error(f"Ошибка при попытке получить show_trial: {e}")
         
         tariff = await db.get_tariff(tariff_id)
         if not tariff:
@@ -71,7 +79,7 @@ async def process_balance_payment(callback: CallbackQuery):
                     "🔐 <b>Данные для подключения:</b>\n"
                     f"<code>{subscription_created[protocol_key]}</code>\n\n",
                     parse_mode="HTML",
-                    reply_markup=await get_start_keyboard(),
+                    reply_markup=await get_start_keyboard(show_trial=show_trial),
                     disable_web_page_preview=True
                 )
                 
@@ -114,7 +122,7 @@ async def process_balance_payment(callback: CallbackQuery):
                     "❌ Произошла ошибка при активации подписки.\n"
                     "Средства возвращены на баланс.\n"
                     "Пожалуйста, попробуйте позже или обратитесь в поддержку.",
-                    reply_markup=await get_start_keyboard()
+                    reply_markup=await get_start_keyboard(show_trial=show_trial)
                 )
             
     except Exception as e:
@@ -122,5 +130,5 @@ async def process_balance_payment(callback: CallbackQuery):
         await callback.message.edit_text(
             "❌ Произошла ошибка при обработке оплаты.\n"
             "Пожалуйста, попробуйте позже или обратитесь в поддержку.",
-            reply_markup=await get_start_keyboard()
+            reply_markup=await get_start_keyboard(show_trial=show_trial)
         ) 
