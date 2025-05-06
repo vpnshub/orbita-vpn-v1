@@ -15,7 +15,7 @@ async def get_start_keyboard(show_trial=False) -> InlineKeyboardMarkup:
         builder.row(InlineKeyboardButton(text="🎁 Пробный период", callback_data="start_trial"))
 
     builder.row(InlineKeyboardButton(text="👤 Личный кабинет", callback_data="start_lk"))
-    builder.row(InlineKeyboardButton(text="💳 Купить подписку", callback_data="start_tariffs"))
+    builder.row(InlineKeyboardButton(text="💳 Оформить подписку", callback_data="start_tariffs"))
     builder.row(InlineKeyboardButton(text="📞 Техподдержка", callback_data="help_support"))
     
     base_buttons = []
