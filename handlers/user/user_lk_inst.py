@@ -1,10 +1,29 @@
 from aiogram import Router, F
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
+from aiogram.filters import Command
 from loguru import logger
+
 
 from handlers.user.user_kb import get_user_instructions_keyboard, get_back_keyboard
 
 router = Router()
+
+@router.callback_query(F.data == "lk_instructions")
+
+@router.message(Command("guides"))
+async def show_instructions_menu_command(message: Message):
+    """Отображение меню инструкций"""
+    try:
+        await message.answer(
+            "📖 Выберите интересующий вас раздел чтобы получить руководство по подключению 📡",
+            reply_markup=get_user_instructions_keyboard()
+        )
+
+    except Exception as e:
+        logger.error(f"Ошибка при отображении меню инструкций: {e}")
+        await message.answer(
+            "Произошла ошибка при загрузке инструкций. Попробуйте позже."
+        )
 
 @router.callback_query(F.data == "lk_instructions")
 async def show_instructions_menu(callback: CallbackQuery):
@@ -12,7 +31,7 @@ async def show_instructions_menu(callback: CallbackQuery):
     logger.info(f"Получен callback: {callback.data}")
     try:
         await callback.message.delete()
-        
+
         await callback.message.answer(
             "📖 Выберите интересующий вас раздел чтобы получить руководство по подключению 📡",
             reply_markup=get_user_instructions_keyboard()
@@ -22,7 +41,7 @@ async def show_instructions_menu(callback: CallbackQuery):
         logger.error(f"Ошибка при отображении меню инструкций: {e}")
         await callback.message.answer(
             "Произошла ошибка при загрузке инструкций. Попробуйте позже."
-        ) 
+        )
 
 @router.callback_query(F.data == "instructions_android")
 async def show_android_instructions(callback: CallbackQuery):

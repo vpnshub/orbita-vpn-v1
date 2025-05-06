@@ -86,7 +86,8 @@ async def bot_start():
 
     await bot.set_my_commands(
         (
-            BotCommand(command="/start", description="Главное меню"),
+            BotCommand(command="/start", description="Главная"),
+            BotCommand(command="/guides", description="Инструкции"),
         ),
     )
 

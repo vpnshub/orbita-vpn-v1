@@ -13,6 +13,7 @@ from handlers.buy_subscribe import subscription_manager
 from handlers.user.user_kb import get_trial_vless_keyboard, get_success_by_keyboard, get_start_keyboard
 import os
 from aiogram.types import FSInputFile
+from aiogram.filters import Command
 
 router = Router()
 
