@@ -86,6 +86,8 @@ async def process_back_to_start(callback: CallbackQuery):
             user = await db.get_user(callback.from_user.id)
             if user.get('trial_period'):
                 show_trial = False
+            if user.get('username').endwith('_bot'):
+                show_trial = False
         except Exception as e:
             logger.error(f"Ошибка при попытке получить show_trial: {e}")
 
