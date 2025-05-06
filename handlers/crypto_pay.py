@@ -186,7 +186,7 @@ class CryptoPayManager:
                 fiat='RUB',
                 description=description,
                 paid_btn_name="callback",
-                paid_btn_url="https://t.me/dsrvpnmanager_bot",
+                paid_btn_url="https://t.me/orbitavpn_bot",
                 expires_in=3600
             )
             
