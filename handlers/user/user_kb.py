@@ -272,30 +272,30 @@ def get_user_balance_keyboard() -> InlineKeyboardMarkup:
     """Создание клавиатуры для баланса"""
     builder = InlineKeyboardBuilder()
     
-    buttons = [
-        #InlineKeyboardButton(text="➕ Пополнить баланс", callback_data="start_add_balance"),
+    """buttons = [
+        InlineKeyboardButton(text="➕ Пополнить баланс", callback_data="start_add_balance"),
         InlineKeyboardButton(text="💳 Тарифы", callback_data="start_tariffs"),
         InlineKeyboardButton(text="💸 Поделиться балансом", callback_data="start_transfer_balance"),
         InlineKeyboardButton(text="🔙 Назад", callback_data="start_lk"),
-    ]
+    ]"""
     
-    builder.row(buttons[0], buttons[1])
-    builder.row(buttons[2])
-    builder.row(buttons[3])
+    builder.row(InlineKeyboardButton(text="💳 Тарифы", callback_data="start_tariffs"))
+    builder.row(InlineKeyboardButton(text="💸 Поделиться балансом", callback_data="start_transfer_balance"))
+    builder.row(InlineKeyboardButton(text="🔙 Назад", callback_data="start_lk"))
     return builder.as_markup()
 
 def get_user_edit_balance_keyboard() -> InlineKeyboardMarkup:
     """Создание клавиатуры для баланса"""
     builder = InlineKeyboardBuilder()
     
-    buttons = [
+    """buttons = [
         InlineKeyboardButton(text="💲 Посмотреть баланс", callback_data="lk_my_balance"),
-        #InlineKeyboardButton(text="➕ Пополнить баланс", callback_data="start_add_balance"),
+        InlineKeyboardButton(text="➕ Пополнить баланс", callback_data="start_add_balance"),
         InlineKeyboardButton(text="💳 Тарифы", callback_data="start_tariffs"),
-    ]
+    ]"""
     
-    builder.row(buttons[0], buttons[1])
-    builder.row(buttons[2])
+    builder.row(InlineKeyboardButton(text="💲 Посмотреть баланс", callback_data="lk_my_balance"))
+    builder.row(InlineKeyboardButton(text="💳 Тарифы", callback_data="start_tariffs"))
     return builder.as_markup()
 
 def get_user_success_transfer_keyboard() -> InlineKeyboardMarkup:
