@@ -33,13 +33,13 @@ async def show_support(callback: CallbackQuery, state: FSMContext):
         if support_message['image_path'] and os.path.exists(support_message['image_path']):
             await callback.message.answer_photo(
                 photo=FSInputFile(support_message['image_path']),
-                caption=f"<blockquote>{support_message['text']}</blockquote>",
+                caption=f"{support_message['text']}",
                 reply_markup=get_back_keyboard(),
                 parse_mode="HTML"
             )
         else:
             await callback.message.answer(
-                text=f"<blockquote>{support_message['text']}</blockquote>",
+                text=f"{support_message['text']}",
                 reply_markup=get_back_keyboard(),
                 parse_mode="HTML"
             )
