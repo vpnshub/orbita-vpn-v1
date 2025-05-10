@@ -194,7 +194,7 @@ async def process_create_invoice(callback: CallbackQuery, state: FSMContext):
                         percentage = promo[0]
                         discount = price * (percentage / 100)
                         price = price - discount
-
+        payment_id, payment_url = None, None
         if provider == 'pspayments':
             payment_id, payment_url = await pspayments_manager.create_payment(
                 amount=price,
@@ -206,6 +206,7 @@ async def process_create_invoice(callback: CallbackQuery, state: FSMContext):
             await callback.message.answer("Ошибка при создании платежа. Попробуйте позже.")
             return
 
+        logger.info(f"check_payment:{provider}:{payment_id}")
 
         if not payment_id or not payment_url:
             await callback.message.answer("Ошибка при создании платежа. Попробуйте позже.")
