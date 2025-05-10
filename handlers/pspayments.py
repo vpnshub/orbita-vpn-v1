@@ -64,24 +64,22 @@ class PSPaymentsManager:
             elif tariff_name:
                 metadata["tariff_name"] = tariff_name
 
-            logger.info({
+
+
+            async with aiohttp.ClientSession() as session:
+                sdata = {
                             "amount": f"{decimal_kop}",
                             "merchant_customer_id": f"tg_{user_id}",
                             "metadata": metadata
-                        })
-
-            async with aiohttp.ClientSession() as session:
+                        }
+                logger.info(sdata)
                 async with session.post(
                         f"https://api.p2p-paradise.info/payments",
                         headers={
                             'merchant-id': f"{self.shop_id}",
                             'merchant-secret-key': f"{self.secret_key}",
                         },
-                        data={
-                            "amount": f"{decimal_kop}",
-                            "merchant_customer_id": f"tg_{user_id}",
-                            "metadata": metadata
-                        }
+                        data=sdata
                 ) as response:
                     status = response.status
                     text = await response.text()
