@@ -253,7 +253,7 @@ async def update_database():
 
             #PAYMENTS Вторая итерация: добавление поля provider, если его нет
             p_column_exists = await db.execute("""
-                PRAGMA table_info(provider)
+                PRAGMA table_info(payments)
             """)
             columns = await p_column_exists.fetchall()
             logger.info(columns)
