@@ -564,7 +564,7 @@ class Database:
     async def get_pspayments_settings(self):
         """Получение настроек PSPayments"""
         async with aiosqlite.connect(self.db_path) as db:
-            async with db.execute("SELECT * FROM pspayments_settings LIMIT 1") as cursor:
+            async with db.execute("SELECT * FROM pspayments_settings WHERE is_enable = 1 LIMIT 1") as cursor:
                 settings = await cursor.fetchone()
                 return settings if settings else None
 

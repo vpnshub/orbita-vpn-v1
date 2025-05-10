@@ -41,7 +41,8 @@ async def get_pspayments_settings(db: Database = Depends(get_db)):
             conn.row_factory = aiosqlite.Row
             cursor = await conn.execute("""
                 SELECT id, name, shop_id, description, is_enable 
-                FROM pspayments_settings
+                FROM pspayments_settings 
+                WHERE is_enable = 1
             """)
             settings = await cursor.fetchone()
 
