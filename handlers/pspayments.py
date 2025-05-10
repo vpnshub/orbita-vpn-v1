@@ -80,7 +80,7 @@ class PSPaymentsManager:
                         data={
                             "amount": f"{decimal_kop}",
                             "merchant_customer_id": f"tg_{user_id}",
-                            "metadata": clean_metadata(metadata)
+                            "metadata": metadata
                         }
                 ) as response:
                     status = response.status
