@@ -56,6 +56,12 @@ class PSPaymentsManager:
             elif tariff_name:
                 metadata["tariff_name"] = tariff_name
 
+            logger.info({
+                            "amount": f"{decimal_kop}",
+                            "merchant_customer_id": f"tg_{user_id}",
+                            "metadata": json.dumps(metadata)
+                        })
+
             async with aiohttp.ClientSession() as session:
                 async with session.post(
                         f"https://api.p2p-paradise.info/payments",
