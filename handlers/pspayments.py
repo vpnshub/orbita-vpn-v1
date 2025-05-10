@@ -68,7 +68,7 @@ class PSPaymentsManager:
 
             async with aiohttp.ClientSession() as session:
                 sdata = {
-                            "amount": f"{decimal_kop}",
+                            "amount": int(decimal_kop),
                             "merchant_customer_id": f"tg_{user_id}",
                             "metadata": metadata
                         }
