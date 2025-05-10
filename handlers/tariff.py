@@ -233,7 +233,7 @@ async def process_create_invoice(callback: CallbackQuery, state: FSMContext):
         logger.error(f"Ошибка при создании счета: {e}")
         await callback.message.answer("Произошла ошибка при создании счета. Попробуйте позже.")
 
-@router.callback_query(F.data.startswith("checks_payment:"))
+@router.callback_query(F.data.startswith("check_payment:"))
 async def check_payment(callback: CallbackQuery, state: FSMContext):
     """Обработчик проверки платежа"""
     try:
