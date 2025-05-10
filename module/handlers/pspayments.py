@@ -19,7 +19,7 @@ def index():
         }
         
         base_url = api_setting.api_url.rstrip('/')
-        response = requests.get(f"{base_url}/pspayments/", headers=headers)
+        response = requests.get(f"{base_url}/providers/pspayments/", headers=headers)
 
         if response.status_code == 200:
             settings = response.json()
@@ -48,7 +48,7 @@ def add_settings():
         
         base_url = api_setting.api_url.rstrip('/')
         response = requests.post(
-            f"{base_url}/pspayments/",
+            f"{base_url}/providers/pspayments/",
             headers=headers,
             json=data
         )
@@ -86,10 +86,10 @@ def delete_settings():
         base_url = api_setting.api_url.rstrip('/')
         shop_id = str(data['shop_id']).strip()
         
-        print(f"Отправка DELETE запроса на {base_url}/pspayments/ с shop_id: {shop_id}")
+        print(f"Отправка DELETE запроса на {base_url}/providers/pspayments/ с shop_id: {shop_id}")
         
         response = requests.delete(
-            f"{base_url}/pspayments/",
+            f"{base_url}/providers/pspayments/",
             headers=headers,
             json={"shop_id": shop_id}
         )
@@ -133,7 +133,7 @@ def get_settings():
         }
         
         base_url = api_setting.api_url.rstrip('/')
-        response = requests.get(f"{base_url}/pspayments/", headers=headers)
+        response = requests.get(f"{base_url}/providers/pspayments/", headers=headers)
 
         if response.status_code == 200:
             settings = response.json()
