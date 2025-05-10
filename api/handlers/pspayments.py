@@ -42,8 +42,7 @@ async def get_pspayments_settings(db: Database = Depends(get_db)):
             cursor = await conn.execute("""
                 SELECT id, name, shop_id, description, is_enable 
                 FROM pspayments_settings 
-                WHERE is_enable = 1 
-                LIMIT 1
+                WHERE is_enable = 1
             """)
             settings = await cursor.fetchone()
 
