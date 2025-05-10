@@ -16,6 +16,7 @@ from handlers.yoopayments import yoopayments
 from handlers.dashboard import dashboard
 from handlers.cryptopayments import cryptopayments
 from handlers.balance_transaction import balance_transaction
+from handlers.pspayments import pspayments
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -25,6 +26,7 @@ app.register_blueprint(bot_messages)
 app.register_blueprint(yookassa)
 app.register_blueprint(bot_settings)
 app.register_blueprint(yoopayments)
+app.register_blueprint(pspayments)
 app.register_blueprint(dashboard)
 app.register_blueprint(cryptopayments)
 app.register_blueprint(balance_transaction)
