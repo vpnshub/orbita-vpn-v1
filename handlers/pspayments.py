@@ -44,8 +44,8 @@ class PSPaymentsManager:
         try:
             metadata = {
                 "transaction_id": str(uuid.uuid4()),
-                "telegram_id": user_id,
-                "username": username
+                "telegram_id": str(user_id),
+                "username": str(username)
             }
 
             decimal_rub = Decimal(str(amount))
