@@ -106,7 +106,7 @@ class PSPaymentsManager:
             if payment['status'] == 'success':
                 logger.info(f"Payment {payment['uuid']} status: {payment['status']}")
 
-                if 'balance_payment' in payment['metadata']:
+                if payment['metadata'].get('balance_payment'):
                     from handlers.user.user_balance import process_successful_balance_payment
                     await process_successful_balance_payment(
                         payment_id=payment['uuid'],
