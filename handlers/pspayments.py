@@ -86,9 +86,14 @@ class PSPaymentsManager:
 
         try:
             payment_id = payment_id.lstrip('psp_')
+
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                        f"https://api.p2p-paradise.info/payments/{payment_id}"
+                        f"https://api.p2p-paradise.info/payments/{payment_id}",
+                        headers={
+                            'merchant-id': f"{self.shop_id}",
+                            'merchant-secret-key': f"{self.secret_key}",
+                        }
                 ) as response:
                     status = response.status
                     text = await response.text()
