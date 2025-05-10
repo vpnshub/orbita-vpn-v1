@@ -257,6 +257,7 @@ async def update_database():
             """)
             columns = await p_column_exists.fetchall()
             column_names = [col[1] for col in columns]
+            logger.info(column_names)
 
             if "provider" not in column_names:
                 logger.info("Добавление поля provider в таблицу payments")
