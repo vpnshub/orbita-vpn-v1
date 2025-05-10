@@ -59,7 +59,7 @@ class PSPaymentsManager:
             logger.info({
                             "amount": f"{decimal_kop}",
                             "merchant_customer_id": f"tg_{user_id}",
-                            "metadata": json.dumps(metadata)
+                            "metadata": json.dumps(metadata, ensure_ascii=False, separators=(',', ':'))
                         })
 
             async with aiohttp.ClientSession() as session:
