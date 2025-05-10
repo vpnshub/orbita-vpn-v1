@@ -98,7 +98,7 @@
                         <input type="text" class="form-control" id="api_key" required>
                     </div>
                     <div class="form-group">
-                        <label for="api_key">API Secret Key</label>
+                        <label for="api_secret_key">API Secret Key</label>
                         <input type="text" class="form-control" id="api_secret_key" required>
                     </div>
                     <div class="form-group">
@@ -151,10 +151,11 @@
                 name: $('#name').val().trim(),
                 shop_id: $('#shop_id').val().trim(),
                 api_key: $('#api_key').val().trim(),
+                api_secret_key: $('#api_secret_key').val().trim(),
                 description: $('#description').val().trim() || null
             };
 
-            if (!formData.name || !formData.shop_id || !formData.api_key) {
+            if (!formData.name || !formData.shop_id || !formData.api_key || !formData.api_secret_key) {
                 showNotification('Пожалуйста, заполните все обязательные поля', 'error');
                 return;
             }
