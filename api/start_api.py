@@ -115,7 +115,7 @@ app.include_router(
 
 app.include_router(
     pspayments.router,
-    prefix="/api/v1",
+    prefix="/api/v1/providers",
     dependencies=[Depends(get_api_key)]
 )
 

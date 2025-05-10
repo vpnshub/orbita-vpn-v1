@@ -12,7 +12,7 @@ sys.path.insert(0, str(root_path))
 from handlers.database import Database
 
 router = APIRouter(
-    prefix="/providers/pspayments",
+    prefix="/pspayments",
     tags=["pspayments"],
     responses={404: {"description": "Настройки не найдены"}},
 )
