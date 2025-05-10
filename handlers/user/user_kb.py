@@ -279,6 +279,7 @@ def get_user_balance_keyboard() -> InlineKeyboardMarkup:
         InlineKeyboardButton(text="🔙 Назад", callback_data="start_lk"),
     ]"""
     
+    #builder.row(InlineKeyboardButton(text="➕ Пополнить баланс", callback_data="start_add_balance"))
     builder.row(InlineKeyboardButton(text="💳 Тарифы", callback_data="start_tariffs"))
     builder.row(InlineKeyboardButton(text="💸 Поделиться балансом", callback_data="start_transfer_balance"))
     builder.row(InlineKeyboardButton(text="🔙 Назад", callback_data="start_lk"))
@@ -295,6 +296,7 @@ def get_user_edit_balance_keyboard() -> InlineKeyboardMarkup:
     ]"""
     
     builder.row(InlineKeyboardButton(text="💲 Посмотреть баланс", callback_data="lk_my_balance"))
+    #builder.row(InlineKeyboardButton(text="➕ Пополнить баланс", callback_data="start_add_balance"))
     builder.row(InlineKeyboardButton(text="💳 Тарифы", callback_data="start_tariffs"))
     return builder.as_markup()
 

@@ -8,12 +8,15 @@ import aiosqlite
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from handlers.promocode import promo_manager
+from handlers.pspayments import pspayments_manager
 from handlers.yookassa import yookassa_manager
 from handlers.buy_subscribe import subscription_manager
 from handlers.user.user_kb import get_trial_vless_keyboard, get_success_by_keyboard, get_start_keyboard
 import os
 from aiogram.types import FSInputFile
 from aiogram.filters import Command
+
+from module.handlers.pspayments import pspayments
 
 router = Router()
 
@@ -123,12 +126,12 @@ async def process_tariff_selection(callback: CallbackQuery):
         
         keyboard = InlineKeyboardBuilder()
         is_yookassa_active = await db.is_yookassa_enabled()
-        
+        is_pspayments_active = await db.is_pspayments_enabled()
         is_crypto_active = await db.is_crypto_enabled()
         
         
-        if is_yookassa_active:
-            keyboard.row(InlineKeyboardButton(text="🔵 CБП", callback_data=f"create_invoice:{tariff_id}"))
+        if is_pspayments_active:
+            keyboard.row(InlineKeyboardButton(text="🔵 CБП", callback_data=f"create_invoice:pspayments:{tariff_id}"))
         if is_crypto_active:
             keyboard.row(InlineKeyboardButton(text="🪙 CryptoBot", callback_data=f"apply_crypto_payments:{tariff_id}"))
         keyboard.row(
@@ -136,7 +139,7 @@ async def process_tariff_selection(callback: CallbackQuery):
         )
 
         keyboard.row(
-            InlineKeyboardButton(text="🎫 Промокод", callback_data=f"apply_promo_code:{tariff_id}"),
+            #InlineKeyboardButton(text="🎫 Промокод", callback_data=f"apply_promo_code:{tariff_id}"),
             InlineKeyboardButton(text="💵 Код-оплаты", callback_data=f"apply_payments_code:{tariff_id}")
         )
         keyboard.row(
@@ -161,8 +164,9 @@ async def process_create_invoice(callback: CallbackQuery, state: FSMContext):
     """Обработчик создания счета"""
     try:
         data = callback.data.split(":")
-        tariff_id = int(data[1])
-        promo_code = data[2] if len(data) > 2 else None
+        provider = data[1]
+        tariff_id = int(data[2])
+        promo_code = data[3] if len(data) > 3 else None
         
         async with aiosqlite.connect(db.db_path) as conn:
             conn.row_factory = aiosqlite.Row
@@ -193,22 +197,27 @@ async def process_create_invoice(callback: CallbackQuery, state: FSMContext):
                         discount = price * (percentage / 100)
                         price = price - discount
 
-        payment_id, payment_url = await yookassa_manager.create_payment(
-            amount=price,
-            description=f"Оплата тарифа {tariff['name']}",
-            user_id=str(callback.from_user.id),
-            tariff_name=tariff['name']
-        )
+        if provider == 'pspayments':
+            payment_id, payment_url = await pspayments_manager.create_payment(
+                amount=price,
+                description=f"Оплата тарифа {tariff['name']}",
+                user_id=str(callback.from_user.id),
+                tariff_name=tariff['name']
+            )
+        else:
+            await callback.message.answer("Ошибка при создании платежа. Попробуйте позже.")
+            return
+
 
         if not payment_id or not payment_url:
             await callback.message.answer("Ошибка при создании платежа. Попробуйте позже.")
             return
 
-        await state.update_data(payment_id=payment_id, tariff_id=tariff_id)
+        await state.update_data(payment_id=payment_id, tariff_id=tariff_id, provider=provider)
 
         keyboard = InlineKeyboardBuilder()
         keyboard.button(text="💰 Оплатить", url=payment_url)
-        keyboard.button(text="🕵️‍♂️ Проверить платеж", callback_data=f"check_payment:{payment_id}")
+        keyboard.button(text="🕵️‍♂️ Проверить платеж", callback_data=f"check_payment:{provider}:{payment_id}")
         keyboard.button(text="🔙 Отмена", callback_data="tariff_back_to_start")
         keyboard.adjust(1)
 
@@ -221,16 +230,16 @@ async def process_create_invoice(callback: CallbackQuery, state: FSMContext):
             parse_mode="Markdown"
         )
 
-
     except Exception as e:
         logger.error(f"Ошибка при создании счета: {e}")
         await callback.message.answer("Произошла ошибка при создании счета. Попробуйте позже.")
 
-@router.callback_query(F.data.startswith("check_payment:"))
+@router.callback_query(F.data.startswith("checks_payment:"))
 async def check_payment(callback: CallbackQuery, state: FSMContext):
     """Обработчик проверки платежа"""
     try:
-        payment_id = callback.data.split(":")[1]
+        payment_id = callback.data.split(":")[2]
+        provider = callback.data.split(":")[1]
         
         if payment_id not in payment_locks:
             payment_locks[payment_id] = Lock()
@@ -246,8 +255,12 @@ async def check_payment(callback: CallbackQuery, state: FSMContext):
                             await callback.answer("Платеж уже был обработан и подписка активирована!", show_alert=True)
                             return
 
-                is_paid = await yookassa_manager.check_payment(payment_id, bot=callback.bot)
-                
+                if provider == 'pspayments':
+                    is_paid = await pspayments_manager.check_payment(payment_id, bot=callback.bot)
+                else:
+                    await callback.answer("Платеж еще не оплачен. Попробуйте проверить позже. [P]")
+                    return
+
                 if not is_paid:
                     await callback.answer("Платеж еще не оплачен. Попробуйте проверить позже.")
                     return
@@ -282,12 +295,13 @@ async def check_payment(callback: CallbackQuery, state: FSMContext):
                         tariff = await cursor.fetchone()
                         if tariff:
                             await conn.execute("""
-                                INSERT INTO payments (user_id, tariff_id, price)
-                                VALUES (?, ?, ?)
+                                INSERT INTO payments (user_id, tariff_id, price, provider)
+                                VALUES (?, ?, ?, ?)
                             """, (
                                 callback.from_user.id,
                                 tariff_id,
-                                tariff[0]
+                                tariff[0],
+                                provider
                             ))
                             await conn.commit()
 

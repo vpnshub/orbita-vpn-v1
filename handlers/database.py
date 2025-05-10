@@ -561,6 +561,13 @@ class Database:
             await db.execute("UPDATE yookassa_settings SET is_enable = ?", (int(enable),))
             await db.commit()
 
+    async def get_pspayments_settings(self):
+        """Получение настроек PSPayments"""
+        async with aiosqlite.connect(self.db_path) as db:
+            async with db.execute("SELECT * FROM pspayments_settings LIMIT 1") as cursor:
+                settings = await cursor.fetchone()
+                return settings if settings else None
+
     async def add_promo_tariff(self, name: str, description: str, left_day: int, server_id: Optional[int] = None) -> bool:
         """
         Добавление нового промо-тарифа
@@ -1055,6 +1062,19 @@ class Database:
                     return bool(result[0]) if result else False
         except Exception as e:
             logger.error(f"Ошибка при проверке статуса Юкассы: {e}")
+            return False
+
+    async def is_pspayments_enabled(self) -> bool:
+        """Проверка активности PSPayments"""
+        try:
+            async with aiosqlite.connect(self.db_path) as db:
+                async with db.execute(
+                    'SELECT is_enable FROM pspayments_settings WHERE is_enable = 1 LIMIT 1'
+                ) as cursor:
+                    result = await cursor.fetchone()
+                    return bool(result[0]) if result else False
+        except Exception as e:
+            logger.error(f"Ошибка при проверке статуса PsPayments: {e}")
             return False
 
     async def is_crypto_enabled(self) -> bool:

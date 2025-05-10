@@ -163,9 +163,9 @@ async def process_custom_amount(message: Message, state: FSMContext):
     """Обработка введенной пользователем суммы"""
     try:
         amount = float(message.text)
-        if amount < 10:
+        if amount < 200:
             await message.answer(
-                "❌ Минимальная сумма пополнения - 10 рублей",
+                "❌ Минимальная сумма пополнения - 200 рублей",
                 reply_markup=get_balance_amount_keyboard()
             )
             return
