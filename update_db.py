@@ -266,7 +266,7 @@ async def update_database():
                 """)
                 await db.commit()
             await db.execute("""
-                UPDATE payments SET provider = 'default' WHERE payment_type IS NULL
+                UPDATE payments SET provider = 'default' WHERE provider IS NULL
             """)
             await db.commit()
             logger.info("Поле provider успешно добавлено")
