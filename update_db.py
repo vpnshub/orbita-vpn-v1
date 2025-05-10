@@ -256,7 +256,6 @@ async def update_database():
                 PRAGMA table_info(payments)
             """)
             columns = await p_column_exists.fetchall()
-            logger.info(columns)
             column_names = [col[1] for col in columns]
             logger.info(column_names)
 
@@ -266,11 +265,11 @@ async def update_database():
                     ALTER TABLE payments ADD COLUMN provider TEXT DEFAULT 'default'
                 """)
                 await db.commit()
-                await db.execute("""
-                    UPDATE payments SET provider = 'default' WHERE payment_type IS NULL
-                """)
-                await db.commit()
-                logger.info("Поле provider успешно добавлено")
+            await db.execute("""
+                UPDATE payments SET provider = 'default' WHERE payment_type IS NULL
+            """)
+            await db.commit()
+            logger.info("Поле provider успешно добавлено")
             #PAYMENTS END
             
             if not await check_column_exists(db, 'server_settings', 'inbound_id_promo'):
