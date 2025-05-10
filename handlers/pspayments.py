@@ -79,7 +79,7 @@ class PSPaymentsManager:
                             'merchant-id': f"{self.shop_id}",
                             'merchant-secret-key': f"{self.secret_key}",
                         },
-                        data=sdata
+                        json=sdata
                 ) as response:
                     status = response.status
                     text = await response.text()
