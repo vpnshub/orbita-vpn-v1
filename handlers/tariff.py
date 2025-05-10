@@ -16,8 +16,6 @@ import os
 from aiogram.types import FSInputFile
 from aiogram.filters import Command
 
-from module.handlers.pspayments import pspayments
-
 router = Router()
 
 class PromoCodeStates(StatesGroup):
