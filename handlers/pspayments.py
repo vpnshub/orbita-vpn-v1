@@ -102,7 +102,7 @@ class PSPaymentsManager:
 
             logger.info(f"Payment {payment['uuid']} status: {payment['status']}")
 
-            if payment.status == 'success':
+            if payment['status'] == 'success':
                 logger.info(f"Payment {payment['uuid']} status: {payment['status']}")
 
                 if 'balance_payment' in payment.metadata:
