@@ -241,6 +241,10 @@ async def check_payment(callback: CallbackQuery, state: FSMContext):
         provider = None
         if payment_id.startswith("psp_"):
             provider = "pspayments"
+
+
+        logger.info(callback.data)
+        logger.info(provider)
         
         if payment_id not in payment_locks:
             payment_locks[payment_id] = Lock()
