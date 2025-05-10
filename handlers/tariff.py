@@ -216,7 +216,7 @@ async def process_create_invoice(callback: CallbackQuery, state: FSMContext):
 
         keyboard = InlineKeyboardBuilder()
         keyboard.button(text="💰 Оплатить", url=payment_url)
-        keyboard.button(text="🕵️‍♂️ Проверить платеж", callback_data=f"check_payment:{provider}:{payment_id}")
+        keyboard.button(text="🕵️‍♂️ Проверить платеж", callback_data=f"check_payment:{payment_id}")
         keyboard.button(text="🔙 Отмена", callback_data="tariff_back_to_start")
         keyboard.adjust(1)
 
@@ -237,8 +237,10 @@ async def process_create_invoice(callback: CallbackQuery, state: FSMContext):
 async def check_payment(callback: CallbackQuery, state: FSMContext):
     """Обработчик проверки платежа"""
     try:
-        payment_id = callback.data.split(":")[2]
-        provider = callback.data.split(":")[1]
+        payment_id = callback.data.split(":")[1]
+        provider = None
+        if payment_id.startswith("psp_"):
+            provider = "pspayments"
         
         if payment_id not in payment_locks:
             payment_locks[payment_id] = Lock()
