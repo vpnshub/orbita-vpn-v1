@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}Платежи ЮKassa - Админ Панель{% endblock %}
+{% block title %}Платежи - Админ Панель{% endblock %}
 
-{% block page_title %}<i class="mdi mdi-credit-card-multiple mr-2"></i>Платежи ЮKassa{% endblock %}
+{% block page_title %}<i class="mdi mdi-credit-card-multiple mr-2"></i>Платежи{% endblock %}
 
 {% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{{ url_for('yookassa.index') }}">ЮKassa</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('yookassa.index') }}">Платежи</a></li>
 <li class="breadcrumb-item active">Платежи</li>
 {% endblock %}
 
@@ -16,8 +16,8 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h4 class="mt-0 header-title">История платежей ЮKassa</h4>
-                        <p class="text-muted">Список всех платежей, проведенных через платежную систему ЮKassa</p>
+                        <h4 class="mt-0 header-title">История платежей</h4>
+                        <p class="text-muted">Список всех платежей, проведенных через платежные системы</p>
                     </div>
                 </div>
                 <div class="text-center mt-3">
@@ -37,6 +37,7 @@
                                 <th>Telegram ID</th>
                                 <th>Тариф</th>
                                 <th class="text-center">Сумма (₽)</th>
+                                <th class="text-center">Провайдер</th>
                                 <th class="text-center">Дата оплаты</th>
                             </tr>
                         </thead>
@@ -47,6 +48,7 @@
                                     <td>{{ payment.username }}</td>
                                     <td>{{ payment.telegram_id }}</td>
                                     <td>{{ payment.tariff_name }}</td>
+                                    <td class="text-center">{{ payment.provider }}</td>
                                     <td class="text-center">{{ payment.price }} ₽</td>
                                     <td class="text-center">{{ payment.date }}</td>
                                 </tr>

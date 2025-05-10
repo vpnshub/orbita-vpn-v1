@@ -127,7 +127,7 @@
                                     <a href="#"><i class="mdi mdi-cash-multiple"></i>Платежи</a> 
                                     <ul class="submenu"> 
                                         <li>
-                                            <a href="{{ url_for('yoopayments.index') }}">Платежи ЮKassa</a>
+                                            <a href="{{ url_for('yoopayments.index') }}">Платежи</a>
                                         </li>
                                         <li>
                                             <a href="{{ url_for('cryptopayments.index') }}">Платежи Crypto Bot</a>
@@ -153,6 +153,9 @@
                                     <ul class="submenu"> 
                                         <li>
                                             <a href="{{ url_for('yookassa.index') }}">Настройки YooKassa</a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ url_for('pspayments.index') }}">Настройки PSPayments</a>
                                         </li>
                                         <li>
                                             <a href="{{ url_for('crypto.index') }}">Настройки Crypto Bot</a>

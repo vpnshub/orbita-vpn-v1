@@ -2812,6 +2812,7 @@ class Database:
                             u.username,
                             t.name AS tariff_name,
                             p.price,
+                            p.provider,
                             p.date
                         FROM payments p
                         LEFT JOIN user u ON p.user_id = u.telegram_id

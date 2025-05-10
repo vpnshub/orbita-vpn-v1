@@ -9,7 +9,12 @@ from pathlib import Path
 root_path = Path(__file__).parent.parent
 sys.path.insert(0, str(root_path))
 
-from api.handlers import users, servers, tariffs, api_keys, trial, pay_code, promocode, statistic, broadcast, promo, yookassa, raffle, bot_message, cryptopay, referral, bot_settings
+from api.handlers import (
+    users, servers, tariffs, api_keys, trial, pay_code,
+    promocode, statistic, broadcast, promo, yookassa,
+    raffle, bot_message, cryptopay, referral, bot_settings,
+    pspayments
+)
 from api.middleware.auth import get_api_key
 
 app = FastAPI(
@@ -104,6 +109,12 @@ app.include_router(
 
 app.include_router(
     cryptopay.router,
+    prefix="/api/v1",
+    dependencies=[Depends(get_api_key)]
+)
+
+app.include_router(
+    pspayments.router,
     prefix="/api/v1",
     dependencies=[Depends(get_api_key)]
 )

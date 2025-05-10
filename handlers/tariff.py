@@ -128,7 +128,7 @@ async def process_tariff_selection(callback: CallbackQuery):
         
         
         if is_yookassa_active:
-            keyboard.row(InlineKeyboardButton(text="🔵 ЮКасса", callback_data=f"create_invoice:{tariff_id}"))
+            keyboard.row(InlineKeyboardButton(text="🔵 CБП", callback_data=f"create_invoice:{tariff_id}"))
         if is_crypto_active:
             keyboard.row(InlineKeyboardButton(text="🪙 CryptoBot", callback_data=f"apply_crypto_payments:{tariff_id}"))
         keyboard.row(

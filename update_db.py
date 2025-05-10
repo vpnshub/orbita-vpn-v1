@@ -164,6 +164,35 @@ async def update_database():
                 await db.commit()
                 logger.info("Добавлены тестовые настройки YooKassa")
 
+            #PSPAYMENTS START
+            table_exists = await db.execute("""
+                            SELECT name FROM sqlite_master 
+                            WHERE type='table' AND name='pspayments_settings'
+                        """)
+            if not await table_exists.fetchone():
+                logger.info("Создание таблицы pspayments_settings")
+                await db.execute('''
+                                CREATE TABLE pspayments_settings (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                    name TEXT,
+                                    shop_id TEXT NOT NULL,
+                                    api_key TEXT NOT NULL,
+                                    api_secret_key TEXT NOT NULL,
+                                    description TEXT,
+                                    is_enable INTEGER DEFAULT 0
+                                )
+                            ''')
+                await db.commit()
+                logger.info("Таблица pspayments_settings успешно создана")
+
+                await db.execute('''
+                                INSERT INTO pspayments_settings (name, shop_id, api_key, api_secret_key, description, is_enable)
+                                VALUES (?, ?, ?, ?, ?, ?)
+                            ''', ('Test Shop', 'test_shop_id', 'test_api_key', 'test_secret_key', 'Тестовые настройки PS Payments', 0))
+                await db.commit()
+                logger.info("Добавлены тестовые настройки PS Payments")
+            #PSPAYMENTS END
+
             cursor = await db.execute('SELECT COUNT(*) FROM tariff')
             tariff_count = await cursor.fetchone()
             if tariff_count[0] == 0:
@@ -200,18 +229,47 @@ async def update_database():
                 else:
                     logger.info("Таблица promocodes уже существует")
 
-            await db.execute("""
-                CREATE TABLE IF NOT EXISTS payments (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER NOT NULL,
-                    tariff_id INTEGER NOT NULL,
-                    price REAL NOT NULL,
-                    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (user_id) REFERENCES users (id),
-                    FOREIGN KEY (tariff_id) REFERENCES tariff (id)
-                )
+
+            # PAYMENTS START
+            p_table_exists = await db.execute("""
+                                        SELECT name FROM sqlite_master 
+                                        WHERE type='table' AND name='payments'
+                                    """)
+            if not await p_table_exists.fetchone():
+                logger.info("Создание таблицы payments")
+                await db.execute("""
+                    CREATE TABLE IF NOT EXISTS payments (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER NOT NULL,
+                        tariff_id INTEGER NOT NULL,
+                        price REAL NOT NULL,
+                        date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users (id),
+                        FOREIGN KEY (tariff_id) REFERENCES tariff (id)
+                    )
+                """)
+                await db.commit()
+                logger.info("Таблица payments успешно создана")
+
+            #PAYMENTS Вторая итерация: добавление поля provider, если его нет
+            p_column_exists = await db.execute("""
+                PRAGMA table_info(provider)
             """)
-            await db.commit()
+            columns = await p_column_exists.fetchall()
+            column_names = [col[1] for col in columns]
+
+            if "provider" not in column_names:
+                logger.info("Добавление поля provider в таблицу payments")
+                await db.execute("""
+                    ALTER TABLE payments ADD COLUMN provider TEXT DEFAULT 'default'
+                """)
+                await db.commit()
+                await db.execute("""
+                    UPDATE payments SET payment_type = 'default' WHERE payment_type IS NULL
+                """)
+                await db.commit()
+                logger.info("Поле provider успешно добавлено")
+            #PAYMENTS END
             
             if not await check_column_exists(db, 'server_settings', 'inbound_id_promo'):
                 logger.info("Добавление колонки 'inbound_id_promo' в таблицу server_settings")
