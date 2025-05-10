@@ -13,6 +13,14 @@ from handlers.admin.admin_kb import get_admin_keyboard
 def kop_to_rub(amount_kop: int) -> Decimal:
     return Decimal(amount_kop) / Decimal("100")
 
+def clean_metadata(raw_meta: dict) -> dict:
+    cleaned = {}
+    for k, v in raw_meta.items():
+        if v is None or str(v).lower() in {"none", "null"}:
+            continue  # пропускаем недопустимые значения
+        cleaned[str(k)[:32]] = str(v)[:512]  # ограничение по длине
+    return cleaned
+
 class PSPaymentsManager:
     def __init__(self):
         self.is_initialized = False
@@ -72,7 +80,7 @@ class PSPaymentsManager:
                         data={
                             "amount": f"{decimal_kop}",
                             "merchant_customer_id": f"tg_{user_id}",
-                            "metadata": json.dumps(metadata)
+                            "metadata": clean_metadata(metadata)
                         }
                 ) as response:
                     status = response.status
