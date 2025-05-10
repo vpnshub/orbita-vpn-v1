@@ -107,7 +107,7 @@ async def show_windows_instructions(callback: CallbackQuery):
         await callback.message.answer(
         f"💻 <b>Инструкции для Windows</b>\n\n"
         f"<blockquote>"
-        f"1. Скачивай <a href='https://github.com/hiddify/hiddify-config/releases/download/v2.0.1/hiddify-config-v2.0.1-windows-x64.exe'>файл</a> \n"
+        f"1. Скачивай <a href='https://github.com/hiddify/hiddify-next/releases/latest/download/Hiddify-Windows-Setup-x64.exe'>файл</a> \n"
         f"2. Устанавливай на ПК и нажимаем 'начать'\n"
         f"3. 'Новый профиль'\n"
         f"4. Выбираем 'Добавить из буфера' (перед этим, надо скопировать ключ который выдал бот 'можно просто нажатием на ключ')  \n"
