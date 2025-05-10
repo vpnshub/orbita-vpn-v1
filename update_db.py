@@ -256,6 +256,7 @@ async def update_database():
                 PRAGMA table_info(provider)
             """)
             columns = await p_column_exists.fetchall()
+            logger.info(columns)
             column_names = [col[1] for col in columns]
             logger.info(column_names)
 
