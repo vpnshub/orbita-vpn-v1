@@ -126,33 +126,6 @@ class PSPaymentsManager:
                         user_id=int(payment['metadata'].get('telegram_id')),
                         bot=bot
                     )
-                else:
-                    if bot:
-                        async with aiosqlite.connect(db.db_path) as conn:
-                            async with conn.execute(
-                                    'SELECT pay_notify FROM bot_settings LIMIT 1'
-                            ) as cursor:
-                                notify_settings = await cursor.fetchone()
-
-                            if notify_settings and notify_settings[0] != 0:
-                                message_text = (
-                                    "🎉 Новая подписка! 🏆\n"
-                                    "<blockquote>"
-                                    f"👤 Пользователь: {payment['metadata'].get('telegram_id')}\n"
-                                    f"💳 Тариф: {payment['metadata'].get('tariff_name')}\n"
-                                    f"📅 Дата активации: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
-                                    "🚀 Подписка успешно оформлена!</blockquote>"
-                                )
-
-                                try:
-                                    await bot.send_message(
-                                        chat_id=notify_settings[0],
-                                        text=message_text,
-                                        parse_mode="HTML",
-                                        # reply_markup=get_admin_keyboard()
-                                    )
-                                except Exception as e:
-                                    logger.error(f"Ошибка при отправке уведомления о подписке: {e}")
 
                 return True
 
